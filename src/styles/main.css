@@ -1,0 +1,408 @@
+/* ==========================================================================
+   Knoasis UI 原型 · 全局样式
+   设计语言：macOS 原生观感 —— 细边框、小圆角、克制留白、无 UI 库、手写 CSS。
+   颜色一律走 CSS 变量，深色模式只切换变量（data-theme 挂在 <html> 上）。
+   ========================================================================== */
+
+/* ---- 浅色（默认） ---- */
+:root {
+  color-scheme: light;
+
+  /* 色板 */
+  --bg: #f5f6f8;
+  --panel: #ffffff;
+  --panel-inset: #fafbfc;
+  --panel-hover: #f6f8fb;
+  --border: #e3e6eb;
+  --border-soft: #eef0f4;
+  --text: #1f2733;
+  --text-muted: #5d6673;
+  --text-faint: #9aa3ae;
+  --accent: #2f9e77;            /* 默认强调色（品牌绿）；随学科由 App 内联覆盖 */
+  --up: #2fbf71;                /* 选中绿色竖条 */
+  --chip-bg: #eff1f5;
+  --chip-text: #5d6673;
+  --field-bg: #f2f4f7;
+  --field-bg-hover: #eceef2;
+  --code-bg: #f3f5f8;
+  --formula-bg: #f4f7fb;
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-2: 0 10px 30px rgba(15, 23, 42, 0.12);
+  --scrim: rgba(15, 23, 42, 0.32);
+  --blanket: rgba(245, 246, 248, 0.82);
+
+  /* 尺寸 */
+  --toolbar-h: 48px;
+  --status-h: 26px;
+  --radius: 8px;
+  --radius-sm: 6px;
+
+  /* 字体 */
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas,
+    "PingFang SC", monospace;
+}
+
+/* ---- 深色 ---- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #14171c;
+  --panel: #1b1f26;
+  --panel-inset: #171a20;
+  --panel-hover: #20242d;
+  --border: #2b303a;
+  --border-soft: #23272f;
+  --text: #e7eaee;
+  --text-muted: #9aa3ad;
+  --text-faint: #626b76;
+  --accent: #37c38c;
+  --up: #37d47f;
+  --chip-bg: #272c35;
+  --chip-text: #a8b0ba;
+  --field-bg: #232833;
+  --field-bg-hover: #2a303c;
+  --code-bg: #22272f;
+  --formula-bg: #20242c;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 12px 34px rgba(0, 0, 0, 0.45);
+  --scrim: rgba(0, 0, 0, 0.5);
+  --blanket: rgba(20, 23, 28, 0.84);
+}
+
+/* ---- 基础 ---- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+  /* 默认允许文本选择：正文与列表需要可选中 + Cmd+C 复制。
+     仅对 UI 控件（工具栏/按钮/标签/分隔条等）单独禁用，见下方控件规则。 */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* UI 控件禁止选中：避免点按 / 拖拽时误选成一片文字（正文与列表不在其列）。
+   按钮一律禁选；列表条目虽然是 <button>，但其标题需要可选中，故单独放行 .card。 */
+button,
+.toolbar,
+.status-bar,
+.list-toolbar,
+.divider,
+.chip,
+.pop,
+.pop-scrim,
+.scrim,
+.toast {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 列表条目 .card 为 <button>：放行其文本选择 */
+.card {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-faint) 42%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--text-faint) 70%, transparent);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ---- 通用控件 ---- */
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text-muted);
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.btn:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+.btn--primary {
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  color: var(--accent);
+}
+.btn--primary:hover {
+  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--text-muted);
+  position: relative;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.icon-btn:hover {
+  background: var(--field-bg-hover);
+  color: var(--text);
+}
+.icon-btn--on {
+  color: var(--accent);
+}
+/* 下拉（自绘 popover） */
+.pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  z-index: 60;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  padding: 5px;
+  animation: pop-in 0.14s ease;
+}
+.pop--right {
+  left: auto;
+  right: 0;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.pop-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: transparent;
+}
+.pop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text);
+  text-align: left;
+}
+.pop-item:hover {
+  background: var(--panel-hover);
+}
+.pop-sep {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 4px 6px;
+}
+.pop .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* 小标签 chip */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 20px;
+  color: var(--chip-text);
+  background: var(--chip-bg);
+  white-space: nowrap;
+}
+.chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* 空态 */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.empty .empty-icon {
+  font-size: 34px;
+  line-height: 1;
+  opacity: 0.85;
+}
+.empty .empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.empty .empty-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  max-width: 320px;
+}
+
+/* 正文 HTML 排版（详情页 v-html 渲染的内容型正文） */
+.entry-content {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text);
+}
+.entry-content h2 {
+  font-size: 15px;
+  font-weight: 650;
+  margin: 22px 0 8px;
+  padding-left: 9px;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  line-height: 1.4;
+}
+.entry-content h2:first-child {
+  margin-top: 4px;
+}
+.entry-content p {
+  margin: 7px 0;
+}
+.entry-content ul,
+.entry-content ol {
+  margin: 7px 0;
+  padding-left: 20px;
+}
+.entry-content li {
+  margin: 5px 0;
+}
+.entry-content strong {
+  font-weight: 650;
+}
+.entry-content .zh {
+  color: var(--text-muted);
+}
+.entry-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 9px 0;
+  font-size: 12.5px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.entry-content th,
+.entry-content td {
+  border: 1px solid var(--border-soft);
+  padding: 6px 9px;
+  text-align: left;
+  vertical-align: top;
+}
+.entry-content thead th {
+  background: var(--panel-inset);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.entry-content code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--code-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.entry-content .formula {
+  display: block;
+  margin: 9px 0;
+  padding: 8px 12px;
+  background: var(--formula-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  text-align: center;
+  overflow-x: auto;
+}
+.entry-content .note-box {
+  margin: 9px 0;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  font-size: 12.5px;
+  color: var(--text-muted);
+}

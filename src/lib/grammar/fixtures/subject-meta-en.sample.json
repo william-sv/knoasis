@@ -1,0 +1,18 @@
+{
+  "_comment": "模拟 Rust knowledge_list_sets 返回的 SubjectMeta（snake_case）。levels label 由学科包 meta 下发：I→基础、II→进阶、III→高级；level_system_label=难度。",
+  "id": "en-grammar",
+  "name": "英语语法",
+  "color": "#2563EB",
+  "discipline": "en-grammar",
+  "level_system": "stage",
+  "level_system_label": "难度",
+  "levels": [
+    { "code": "I", "label": "基础", "rank": 1 },
+    { "code": "II", "label": "进阶", "rank": 2 },
+    { "code": "III", "label": "高级", "rank": 3 }
+  ],
+  "types": [{ "value": "grammar", "label": "语法" }],
+  "template": null,
+  "counts": { "total": 382, "by_level": { "I": 121, "II": 137, "III": 124 } },
+  "description": "英语语法 · 21 类 / 382 条语法点 · 740 张图解"
+}

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Knoasis UI 原型 · 种子</title>
+  </head>
+  <body>
+    <p>种子页：写入 localStorage 后跳转到主应用（仅用于开发期视觉验证）</p>
+    <script>
+      // 用法：http://127.0.0.1:1420/dev-seed.html?theme=dark&favs=...#panel=favorites
+      // - theme / split / favs / notes：写入 localStorage 后失效（后续刷新仍生效）
+      // - set / active / sel / q / panel：从查询参数或 hash 透传到目标 URL
+      const p = new URLSearchParams(location.search);
+      const fromHash = new URLSearchParams(location.hash.slice(1));
+
+      try {
+        if (p.has("theme")) localStorage.setItem("knoasis.theme.v1", p.get("theme"));
+        if (p.has("split")) localStorage.setItem("knoasis.split.v1", p.get("split"));
+        if (p.has("favs")) localStorage.setItem("knoasis.favorites.v1", p.get("favs"));
+        if (p.has("notes")) localStorage.setItem("knoasis.notes.v1", p.get("notes"));
+      } catch (e) {
+        /* ignore */
+      }
+
+      // 合并查询参数与已有 hash 的视图参数
+      const merged = new URLSearchParams();
+      const keys = ["set", "active", "sel", "q", "panel"];
+      for (const k of keys) {
+        if (p.has(k)) merged.set(k, p.get(k));
+        else if (fromHash.has(k)) merged.set(k, fromHash.get(k));
+      }
+      const target = merged.toString() ? `/#${merged.toString()}` : "/";
+      setTimeout(() => location.replace(target), 30);
+    </script>
+  </body>
+</html>

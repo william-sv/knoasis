@@ -1,0 +1,17 @@
+{
+  "_comment": "模拟 Rust knowledge_list_sets 返回（SubjectMeta DTO，snake_case）。id=discipline=kr-grammar（学科包 set_id），levels 来自 meta.json；template 由 Rust 解析包内/registry/默认后下发；counts 由包内 DB 计算。",
+  "id": "kr-grammar",
+  "name": "韩语语法",
+  "color": "#D97706",
+  "discipline": "kr-grammar",
+  "level_system": "topik",
+  "level_system_label": "TOPIK",
+  "levels": [
+    { "code": "I", "label": "TOPIK I", "rank": 1 },
+    { "code": "II", "label": "TOPIK II", "rank": 2 }
+  ],
+  "types": [{ "value": "grammar", "label": "语法" }],
+  "template": null,
+  "counts": { "total": 642, "by_level": { "": 370, "I": 102, "II": 170 } },
+  "description": "韩语语法 · TOPIK I/II 分级"
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "knoasis",
+  "version": "0.1.0",
+  "identifier": "com.william.knoasis",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "knoasis",
+        "width": 1080,
+        "height": 680,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$APPDATA/com.william.knoasis/knowledge/**",
+          "$RESOURCE/knowledge/**",
+          "$APPDATA/com.william.knoasis/grammar/en_images/**",
+          "$RESOURCE/grammar/en_images/**"
+        ]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "resources": {
+      "resources/grammar/grammar.db": "grammar/grammar.db",
+      "resources/grammar/template_registry.json": "grammar/template_registry.json"
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "_comment": "模拟 Rust knowledge_get_entry 返回（EntryPayload，snake_case）。content 为库内 view-ready JSON（键形与 src-tauri 迁移产物一致：fields/lists/related）。此条为代表性样例，故意让 meanings/usages/examples/cautions/collocations/related 有值以覆盖渲染与导出路径。images=[]（kr 无图学科）。",
+  "uid": "kr-grammar:55a8582c59fd",
+  "set_id": "kr-grammar",
+  "headword": "-기 때문에",
+  "category": "原因·理由",
+  "level_code": "II",
+  "level_label": "TOPIK II",
+  "tags": ["原因", "连接语尾"],
+  "summary": "因为……，由于……",
+  "content": {
+    "fields": {
+      "pattern": "-기 때문에",
+      "variants": ["-기 때문이에요"],
+      "form_rule": "动词词干 + -기 때문에",
+      "attaches_to": ["动词", "形容词"],
+      "speech_style": "해요체",
+      "politeness": "敬语",
+      "register": "通用",
+      "irregular": false,
+      "difficulty": 2,
+      "frequency": "高",
+      "meaning_brief": "因为……，由于……",
+      "usage_scene": "书面与口语均常用，强调原因时可用。",
+      "notes": "-기 때문이에요 是完整的句尾形式。"
+    },
+    "lists": {
+      "meanings": [
+        { "meaning_zh": "因为…所以…", "meaning_ko": "-기 때문에", "note": "表示原因或理由" }
+      ],
+      "usages": [
+        { "title": "基本用法", "usage_zh": "强调原因，可用于肯定句和否定句", "form": "-기 때문에" }
+      ],
+      "scenes": [
+        { "scene": "书面语/口语", "note": "常用于说明理由" }
+      ],
+      "examples": [
+        { "ko": "비가 오기 때문에 우산을 가져가세요.", "zh": "因为下雨，所以请带伞。", "note": "" },
+        { "ko": "늦게 자서 피곤하기 때문이에요.", "zh": "因为晚睡，所以很累。", "note": "" }
+      ],
+      "cautions": [
+        { "caution": "不要与 '-니까' 混淆", "wrong": "-기 때문에 오다", "right": "오기 때문에" }
+      ],
+      "collocations": [
+        { "word": "-기 때문에 생기다", "note": "表原因产生" }
+      ]
+    },
+    "related": {
+      "resolved": [
+        { "uid": "kr-grammar:feed00000001", "headword": "-느라고", "relation": "相似", "note": "均表原因，-느라고 侧重影响" }
+      ],
+      "pending": [
+        { "targetText": "-아/어서", "relation": "相似", "note": "" },
+        { "targetText": "A/V-으니까", "relation": "相似", "note": "" }
+      ]
+    }
+  },
+  "images": []
+}

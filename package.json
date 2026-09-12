@@ -1,0 +1,27 @@
+{
+  "name": "knoasis",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js",
+    "test:sfc": "node scripts/check-sfc.mjs"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "pinia": "^4.0.3",
+    "vue": "^3.5.13",
+    "vue3-katex": "^0.8.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "vite": "^8.0.16"
+  }
+}

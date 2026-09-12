@@ -1,0 +1,24 @@
+{
+  "_comment": "模拟 Rust knowledge_list_entries 返回（EntryItem DTO，snake_case）。两行均为迁移包 resources/knowledge/kr-grammar.knowledgeset/knowledge.db 的真实行：N마저 未分级（level ''）、-는데 为 TOPIK II；uid 为 kr-grammar:hex(sha1(headword)[0..12])。",
+  "total": 2,
+  "items": [
+    {
+      "uid": "kr-grammar:23c79de79b43",
+      "headword": "N마저",
+      "category": "助词",
+      "level_code": "",
+      "level_label": "未分级",
+      "tags": ["助词", "强调表达"],
+      "summary": "连……都（负面语气）"
+    },
+    {
+      "uid": "kr-grammar:bbd19a9ab9c4",
+      "headword": "-는데",
+      "category": "连接语尾",
+      "level_code": "II",
+      "level_label": "TOPIK II",
+      "tags": ["连接语尾"],
+      "summary": "介绍/提示/转折 接在动词词干后，对某种行为进行说明，主要用于介绍、转折、提示等。"
+    }
+  ]
+}

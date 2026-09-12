@@ -1,0 +1,296 @@
+{
+  "_说明": "每个学科一个详情模板。前端按 sections 顺序渲染；type=fields 渲染单值字段组，type=list 渲染多值列表，type=paragraph 渲染整段 pre-wrap 文本（view.paragraphs[key]），type=images 渲染图解网格（view.images，空则整节隐藏）。",
+  "kr_grammar": {
+    "label": "韩语语法",
+    "headwordLabel": "语法",
+    "sections": [
+      {
+        "key": "detail",
+        "label": "语法信息",
+        "type": "fields",
+        "fields": [
+          {
+            "key": "pattern",
+            "label": "语法"
+          },
+          {
+            "key": "variants",
+            "label": "异形/变体"
+          },
+          {
+            "key": "form_rule",
+            "label": "构成规则"
+          },
+          {
+            "key": "attaches_to",
+            "label": "接续对象"
+          },
+          {
+            "key": "speech_style",
+            "label": "语体"
+          },
+          {
+            "key": "politeness",
+            "label": "敬语"
+          },
+          {
+            "key": "register",
+            "label": "口语/书面"
+          },
+          {
+            "key": "difficulty",
+            "label": "难度"
+          },
+          {
+            "key": "frequency",
+            "label": "频率"
+          }
+        ]
+      },
+      {
+        "key": "meanings",
+        "label": "意思",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "meaning_zh",
+            "label": "中文"
+          },
+          {
+            "key": "meaning_ko",
+            "label": "韩文"
+          },
+          {
+            "key": "note",
+            "label": "备注"
+          }
+        ]
+      },
+      {
+        "key": "usages",
+        "label": "使用方法",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "title",
+            "label": "用法"
+          },
+          {
+            "key": "usage_zh",
+            "label": "说明"
+          },
+          {
+            "key": "form",
+            "label": "形式"
+          }
+        ]
+      },
+      {
+        "key": "scenes",
+        "label": "使用场景",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "scene",
+            "label": "场景"
+          },
+          {
+            "key": "note",
+            "label": "备注"
+          }
+        ]
+      },
+      {
+        "key": "examples",
+        "label": "例句（双语）",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "ko",
+            "label": "韩语"
+          },
+          {
+            "key": "zh",
+            "label": "中文"
+          },
+          {
+            "key": "note",
+            "label": "备注"
+          }
+        ]
+      },
+      {
+        "key": "cautions",
+        "label": "注意事项",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "caution",
+            "label": "注意点"
+          },
+          {
+            "key": "wrong",
+            "label": "误"
+          },
+          {
+            "key": "right",
+            "label": "正"
+          }
+        ]
+      },
+      {
+        "key": "collocations",
+        "label": "常见搭配",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "word",
+            "label": "搭配"
+          },
+          {
+            "key": "note",
+            "label": "备注"
+          }
+        ]
+      },
+      {
+        "key": "related",
+        "label": "近似语法",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "headword",
+            "label": "语法"
+          },
+          {
+            "key": "relation",
+            "label": "关系"
+          },
+          {
+            "key": "note",
+            "label": "区别"
+          }
+        ]
+      }
+    ]
+  },
+  "en_grammar": {
+    "label": "英语语法",
+    "headwordLabel": "语法点",
+    "sections": [
+      {
+        "key": "explanation",
+        "label": "讲解",
+        "type": "paragraph",
+        "fieldKey": "explanation"
+      },
+      {
+        "key": "images",
+        "label": "图解",
+        "type": "images"
+      },
+      {
+        "key": "examples",
+        "label": "例句",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "en",
+            "label": "英文"
+          },
+          {
+            "key": "zh",
+            "label": "中文"
+          },
+          {
+            "key": "note",
+            "label": "备注"
+          }
+        ]
+      }
+    ]
+  },
+  "en_vocab": {
+    "label": "英语单词",
+    "headwordLabel": "单词",
+    "_示意": "同结构，字段按学科特点自定",
+    "sections": [
+      {
+        "key": "detail",
+        "label": "单词信息",
+        "type": "fields",
+        "fields": [
+          {
+            "key": "word",
+            "label": "单词"
+          },
+          {
+            "key": "phonetic_uk",
+            "label": "英音"
+          },
+          {
+            "key": "phonetic_us",
+            "label": "美音"
+          },
+          {
+            "key": "pos",
+            "label": "词性"
+          },
+          {
+            "key": "etymology",
+            "label": "词源"
+          }
+        ]
+      },
+      {
+        "key": "definitions",
+        "label": "释义",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "pos",
+            "label": "词性"
+          },
+          {
+            "key": "def_zh",
+            "label": "中文"
+          },
+          {
+            "key": "def_en",
+            "label": "英文"
+          }
+        ]
+      },
+      {
+        "key": "examples",
+        "label": "例句",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "en",
+            "label": "英文"
+          },
+          {
+            "key": "zh",
+            "label": "中文"
+          }
+        ]
+      },
+      {
+        "key": "word_forms",
+        "label": "词形变化",
+        "type": "list",
+        "itemFields": [
+          {
+            "key": "form",
+            "label": "形式"
+          },
+          {
+            "key": "value",
+            "label": "变化"
+          }
+        ]
+      }
+    ]
+  }
+}
