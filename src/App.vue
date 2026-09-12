@@ -31,10 +31,16 @@ watch(
 // ---- 启动：store 初始化在 useKnowledgeSets() 时自动触发（Tauri 异步 IPC 加载真实数据；浏览器为空态） ----
 // 数据就绪后再决定落地视图：URL hash 深链优先（dev / 分享链接）；否则按记忆的学科包路由
 // （无记忆 → 首页；记忆有效 → 对应学科浏览页；记忆失效应已由 applyStartupRoute 清掉并回落首页）。
+//
+// 同时监听 source 而非仅 loaded：首次加载失败时 loaded 已置 true（source='error'），
+// 用户点「重新加载」成功后 source 由 'error' → 'ipc'，但 loaded 不再变化。
+// 若只看 loaded，这条恢复路径不会再次触发路由判定，成功后会一直停在首页；
+// 一并监听 source 即可在「加载失败 → 重新加载成功」时补跑一次（仅 source 真变化才触发，
+// 因此正常浏览中的 ipc→ipc 重载不会重复应用，与 loadFromHash 的 applied 逻辑也不冲突）。
 watch(
-  () => ks.loaded,
-  (v) => {
-    if (!v) return;
+  () => [ks.loaded, ks.source],
+  ([loaded]) => {
+    if (!loaded) return;
     const deepLinked = ui.loadFromHash();
     if (!deepLinked) ui.applyStartupRoute();
     if (ui.view === "browse" && !ui.selectedUid && ks.visibleEntries.length) {
