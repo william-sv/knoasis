@@ -49,7 +49,7 @@ function removeItem(uid, e) {
           </div>
           <p class="fav-summary">{{ item.summary }}</p>
           <div class="fav-meta">
-            <span class="chip">{{ item.set ? item.set.name : item.discipline }}</span>
+            <span v-if="item.set || item.discipline" class="chip">{{ item.set ? item.set.name : item.discipline }}</span>
             <span class="chip">{{ typeLabel(item.type) }}</span>
           </div>
         </div>
@@ -60,7 +60,7 @@ function removeItem(uid, e) {
     <!-- 空态 -->
     <div v-else class="empty panel-empty">
       <div class="empty-title">还没有收藏</div>
-      <div class="empty-hint">在详情底部点击「收藏」，常用知识点会出现在这里，跨学科统一管理。</div>
+      <div class="empty-hint">在详情右上角点击「收藏」，常用知识点会出现在这里，跨学科统一管理。</div>
     </div>
   </aside>
 </template>

@@ -1,7 +1,7 @@
 // Knoasis · knowledge 发现机制（扫描两知识根读 meta.json → KnowledgeSetMeta）
 //
 // 规则（docs/Knoasis-学科数据组织与第三方接入方案.md §3.4）：
-//  1. 两根：随包内置根 $RESOURCE/knowledge（dev 下回退仓库 resources/knowledge）+
+//  1. 两根：随包内置根 $RESOURCE/knowledge +
 //     用户/第三方根 $APPDATA/.../knowledge
 //  2. 遍历根下 `*.knowledgeset/` 目录读 meta.json；解析失败 / 结构非法 → 跳过并记 warning
 //  3. 同 set_id 冲突：版本高者胜；版本相同用户根胜

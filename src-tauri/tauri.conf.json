@@ -24,10 +24,7 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "$APPDATA/com.william.knoasis/knowledge/**",
-          "$RESOURCE/knowledge/**",
-          "$APPDATA/com.william.knoasis/grammar/en_images/**",
-          "$RESOURCE/grammar/en_images/**"
+          "$APPDATA/knowledge/**"
         ]
       }
     }

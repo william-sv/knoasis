@@ -9,11 +9,14 @@ import { useUi } from "../stores/ui.js";
 
 const ui = useUi();
 
-/** 演示用学科包目录（结构清晰，便于日后替换真实源） */
+/** 演示用学科包目录（结构清晰，便于日后替换真实源）
+ *
+ * 说明：以下均为中性示例数据，不对应任何真实可下载的学科包；接入真实下载源时整体替换。
+ */
 const SUBJECTS = [
   {
-    id: "ko-grammar",
-    name: "韩语语法",
+    id: "sample-set-a",
+    name: "示例学科 A",
     color: "#2f9e77",
     packages: [
       { version: "v1.2.0", entries: 1280, size: "3.4 MB", updatedAt: "2026-08-30" },
@@ -22,8 +25,8 @@ const SUBJECTS = [
     ],
   },
   {
-    id: "en-grammar",
-    name: "英语语法",
+    id: "sample-set-b",
+    name: "示例学科 B",
     color: "#2563eb",
     packages: [
       { version: "v2.0.1", entries: 2140, size: "5.7 MB", updatedAt: "2026-09-02" },
@@ -31,8 +34,8 @@ const SUBJECTS = [
     ],
   },
   {
-    id: "ja-grammar",
-    name: "日语语法",
+    id: "sample-set-c",
+    name: "示例学科 C",
     color: "#e5484d",
     packages: [
       { version: "v1.3.2", entries: 980, size: "2.9 MB", updatedAt: "2026-08-21" },
@@ -40,8 +43,8 @@ const SUBJECTS = [
     ],
   },
   {
-    id: "math",
-    name: "数学",
+    id: "sample-set-d",
+    name: "示例学科 D",
     color: "#7c3aed",
     packages: [
       { version: "v1.0.4", entries: 760, size: "4.2 MB", updatedAt: "2026-07-11" },
@@ -49,8 +52,8 @@ const SUBJECTS = [
     ],
   },
   {
-    id: "physics",
-    name: "物理",
+    id: "sample-set-e",
+    name: "示例学科 E",
     color: "#0891b2",
     packages: [
       { version: "v1.1.0", entries: 540, size: "3.6 MB", updatedAt: "2026-08-09" },
@@ -58,8 +61,8 @@ const SUBJECTS = [
     ],
   },
   {
-    id: "chemistry",
-    name: "化学",
+    id: "sample-set-f",
+    name: "示例学科 F",
     color: "#d97706",
     packages: [
       { version: "v1.0.2", entries: 610, size: "3.9 MB", updatedAt: "2026-07-25" },

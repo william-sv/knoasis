@@ -70,22 +70,17 @@ pub struct OpenDirArgs {
 }
 
 // ---------------------------------------------------------------------------
-// 根目录解析（dev：内置根回退仓库 resources/knowledge）
+// 根目录解析（内置根 = 随包资源；用户根 = 应用数据目录）
 // ---------------------------------------------------------------------------
 
-/// 内置根：打包后 $RESOURCE/knowledge；dev 下回退仓库 src-tauri/resources/knowledge
+/// 内置根：打包后 $RESOURCE/knowledge（随包内置学科包）。
+/// 当前发行版不内置任何学科包，该目录通常不存在 → 返回 None，由用户根继续扫描。
 fn builtin_root(app: &AppHandle) -> Option<std::path::PathBuf> {
     if let Ok(dir) = app.path().resource_dir() {
         let p = dir.join("knowledge");
         if p.is_dir() {
             return Some(p);
         }
-    }
-    let dev = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("resources")
-        .join("knowledge");
-    if dev.is_dir() {
-        return Some(dev);
     }
     None
 }

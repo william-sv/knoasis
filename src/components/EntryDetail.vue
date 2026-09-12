@@ -220,6 +220,7 @@ const katexOptions = {
           <div class="meta-row">
             <div class="meta-tags">
               <button
+                v-if="entry.discipline"
                 type="button"
                 class="chip chip--set chip--clickable"
                 :class="{ 'is-active': subjectActive }"
@@ -348,7 +349,7 @@ const katexOptions = {
         </template>
       </div>
 
-      <!-- 笔记（展开于底部操作栏上方） -->
+      <!-- 笔记（展开于正文下方·详情底部） -->
       <div v-if="noteOpen" class="note-panel">
         <div class="note-head">
           <span class="note-title">笔记</span>

@@ -20,6 +20,14 @@ const ks = useKnowledgeSets();
 // 空态引导：一个学科包都没有（首次启动 / 全部删除）时给出明确导入入口
 const showOnboarding = computed(() => !ks.loading && ks.source !== "error" && ks.sets.length === 0);
 
+// 加载失败：持久可见的错误态（给出原因与重试入口，避免首页静默空白）
+const loadFailed = computed(() => !ks.loading && ks.source === "error");
+const loadErrorText = computed(() => ks.loadError || "未知错误");
+
+async function onRetry() {
+  await ks.reload();
+}
+
 function onDownload() {
   ui.openDownload();
 }
@@ -50,6 +58,16 @@ async function onUserGuide() {
         <h1 class="home-title">Knoasis</h1>
         <p class="home-sub">诺西斯 · 你的知识绿洲，让每一个知识点都有归处</p>
       </header>
+
+      <!-- 加载失败：持久错误态（原因 + 重试 / 管理入口） -->
+      <div v-if="loadFailed" class="home-error">
+        <div class="error-title">学科数据加载失败</div>
+        <div class="error-hint">{{ loadErrorText }}</div>
+        <div class="error-actions">
+          <button class="btn btn--primary" @click="onRetry">重新加载</button>
+          <button class="btn" @click="onManage">管理学科包…</button>
+        </div>
+      </div>
 
       <!-- 空态引导：尚无任何学科包时，突出「导入」入口 -->
       <div v-if="showOnboarding" class="home-onboarding">
@@ -174,6 +192,38 @@ async function onUserGuide() {
   padding: 1px 5px;
 }
 .onboarding-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* 加载失败持久错误态 */
+.home-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 18px 24px;
+  border: 1px solid color-mix(in srgb, #e5484d 45%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, #e5484d 8%, var(--panel));
+}
+.error-title {
+  font-size: 14px;
+  font-weight: 650;
+  color: #e5484d;
+}
+.error-hint {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 480px;
+  word-break: break-word;
+}
+.error-actions {
   display: flex;
   align-items: center;
   gap: 10px;

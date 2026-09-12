@@ -143,11 +143,15 @@ export const useUi = defineStore("ui", () => {
 
   /**
    * 启动路由：等学科包列表加载完成后调用，依据记忆决定首页 / 浏览页。
-   * 记忆的学科包已被删除/停用时清掉失效记忆并回落首页。
+   *
+   * 失效记忆清理有严格前提：**真实数据确实加载成功**（source==='ipc'）且确实没有该包，
+   * 才能判定「记忆已失效」并清键。若本轮是「加载失败」（source==='error'）或浏览器空态
+   * （source==='empty'），sets 为空只是「暂时没读到」，并非包被删除——此时必须保留记忆，
+   * 否则一次偶发加载失败就会把用户的有效选择误清掉，下次启动莫名回到首页。
    */
   function applyStartupRoute() {
     const res = resolveStartupView(readActiveSetPref(), knowledgeSets.sets);
-    if (res.clearMemory) clearActiveSetPref();
+    if (res.clearMemory && knowledgeSets.source === "ipc") clearActiveSetPref();
     activeSetId.value = res.activeSetId;
     view.value = res.view;
   }
@@ -279,6 +283,9 @@ export const useUi = defineStore("ui", () => {
       if (name === "favorites") panel.value = "favorites";
       applied = true;
     }
+    // 命中深链即表示用户意图进入工作区：无记忆时 view 初值可能停在 'home'，此处切到浏览态，
+    // 否则深链只改了 activeSetId 却把用户留在首页。
+    if (applied) view.value = "browse";
     return applied;
   }
 

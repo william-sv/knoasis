@@ -1,6 +1,6 @@
 <script setup>
 // 顶栏：Logo（回浏览态·全部学科）· Home 入口 · 全局搜索（防抖+IME 兼容）· 主题 · 菜单
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useUi } from "../stores/ui.js";
 import { useSearch } from "../stores/search.js";
 import { useFavorites } from "../stores/favorites.js";
@@ -11,6 +11,7 @@ import homeAsset from "../assets/icons/home.png";
 import darkAsset from "../assets/icons/dark.png";
 import lightAsset from "../assets/icons/light.png";
 import menuAsset from "../assets/icons/menu.png";
+import { shouldFocusSearch } from "../lib/shortcuts.js";
 
 const ui = useUi();
 const search = useSearch();
@@ -20,6 +21,9 @@ const notes = useNotes();
 // ---------- 搜索（debounce ~80ms + IME composition 兼容） ----------
 const composing = ref(false);
 let debounceTimer = null;
+
+// 搜索输入框引用：供全局 ⌘K / Ctrl+K 聚焦并全选
+const searchInput = ref(null);
 
 // v-model 直接绑定 store.q，便于其它操作（切学科等）清空输入
 const qModel = computed({
@@ -128,9 +132,26 @@ function stopProp(e) {
   e.stopPropagation();
 }
 
-// 卸载时清理定时器
+// ---------- 全局快捷键：Cmd/Ctrl + K 聚焦搜索框 ----------
+// 仅非输入态抢占（焦点已在输入类元素内时不处理）；命中时 preventDefault 阻止默认行为。
+function onGlobalKeydown(e) {
+  if (!shouldFocusSearch(e, document.activeElement)) return;
+  e.preventDefault();
+  const el = searchInput.value;
+  if (!el) return;
+  el.focus();
+  // 已有文本则全选，便于直接输入覆盖
+  if (typeof el.select === "function") el.select();
+}
+
+onMounted(() => {
+  window.addEventListener("keydown", onGlobalKeydown);
+});
+
+// 卸载时清理定时器与全局监听
 onBeforeUnmount(() => {
   clearTimeout(debounceTimer);
+  window.removeEventListener("keydown", onGlobalKeydown);
 });
 </script>
 
@@ -157,6 +178,7 @@ onBeforeUnmount(() => {
     <div class="search">
       <span class="search-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input
+        ref="searchInput"
         v-model="qModel"
         class="search-input"
         type="text"

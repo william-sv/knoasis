@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js",
+    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js src/lib/__tests__/shortcuts.test.js",
     "test:sfc": "node scripts/check-sfc.mjs"
   },
   "dependencies": {

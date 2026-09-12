@@ -26,9 +26,12 @@ export function levelLabelOf(code) {
 /**
  * EntryItem → UI 条目（现有组件/搜索器消费的形状）
  * @param {object} item Rust EntryItem DTO（uid/headword/category/level_code/level_label/tags/summary）
- * @param {string} [discipline] 学科 UI id（默认 kr-grammar，兼容既有调用/单测）
+ * @param {string} [discipline] 学科 UI id（由调用方按条目所属学科包显式传入）
+ *
+ * 缺省为空字符串：学科归属应交由调用方（如 knowledgeSets.fetchRealData 传 s.discipline）提供；
+ * 空值表示「未归属具体学科」，UI 层据此不渲染学科 chip（见 EntryDetail）。
  */
-export function toEntryItem(item, discipline = "kr-grammar") {
+export function toEntryItem(item, discipline = "") {
   const code = item.level_code || "";
   return {
     uid: item.uid,

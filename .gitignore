@@ -12,8 +12,8 @@ dist
 dist-ssr
 *.local
 
-# Rust / Tauri 构建产物
-src-tauri/target/
+# Rust / Tauri 构建产物（含 Cargo/rustc 生成的 targetXXXXXX 变体目录）
+src-tauri/target*/
 
 # 本地数据目录：legacy 韩语语法 SQLite 工作副本（data/grammar/grammar.db ~3MB + .bak），
 # 与随包资源 src-tauri/resources/grammar/grammar.db 重复，属可再生的派生数据，不纳入版本库。

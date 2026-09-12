@@ -49,7 +49,7 @@ test("toEntryItem 映射真实 N마저（未分级：level '' rank 0、category 
   assert.equal(ui.name, "N마저");
   assert.equal(ui.type, "grammar");
   assert.equal(ui.category, "助词");
-  assert.equal(ui.discipline, "kr-grammar");
+  assert.equal(ui.discipline, "");
   assert.equal(ui.level.code, "");
   assert.equal(ui.level.rank, 0);
   assert.deepEqual(ui.tags, ["助词", "强调表达"]);

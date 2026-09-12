@@ -132,7 +132,7 @@ test("exportGrammarMarkdown 通用：paragraph 全文 / images 占位 / list 例
   assert.ok(!md.includes("## 概述"), "不应出现 kr 专属概述");
 });
 
-test("toEntryItem 支持 discipline 参数（多学科通用）；未传默认 kr-grammar；III → rank 3", () => {
+test("toEntryItem 支持 discipline 参数（多学科通用）；未传默认空串；III → rank 3", () => {
   const item = {
     uid: "en-grammar:60303ae22b99",
     headword: "定语从句",
@@ -148,7 +148,7 @@ test("toEntryItem 支持 discipline 参数（多学科通用）；未传默认 k
   assert.equal(ui.level.code, "III");
   assert.equal(ui.level.rank, 3);
   const fallback = toEntryItem(item);
-  assert.equal(fallback.discipline, "kr-grammar");
+  assert.equal(fallback.discipline, "");
 });
 
 test("exportGrammarMarkdown 模板缺失时仅导出条目元信息（不抛错）", () => {

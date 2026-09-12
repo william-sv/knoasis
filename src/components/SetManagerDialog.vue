@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
           class="manual-input"
           type="text"
           spellcheck="false"
-          placeholder="输入学科包目录绝对路径，例如 /Users/you/out/en-grammar.knowledgeset"
+          placeholder="输入学科包目录绝对路径，例如 /Users/you/Downloads/example.knowledgeset"
           @keydown.enter="pickAndImport"
         />
         <button class="btn" :disabled="!manualPath.trim() || loading" @click="pickAndImport">
