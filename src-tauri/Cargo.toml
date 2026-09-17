@@ -25,6 +25,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rusqlite = { version = "0.31", features = ["bundled"] }
 sha1 = "0.10"
+# 单文件分发格式 .kpkg 的反向解包（Studio 把 .knowledgeset 目录 zip 成 .kpkg）
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

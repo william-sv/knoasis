@@ -169,23 +169,24 @@ export const useKnowledgeSets = defineStore("knowledgeSets", () => {
   });
 
   // 搜索激活时 hits 优先；否则取当前学科 / 全部条目；再叠加属性筛选（AND）
+  // 注：等级（level）概念已取消，不再作为筛选维度。
   const baseList = computed(() => {
     const search = useSearch();
     const f = search.filters;
     let list = search.active ? search.hits : scopedEntries.value;
-    if (f.level != null) {
-      list = list.filter((e) => (e.level ? e.level.code : "") === f.level);
-    }
     if (f.type != null) {
       list = list.filter((e) => e.type === f.type);
     }
     if (f.category != null) {
       list = list.filter((e) => e.category === f.category);
     }
+    if (f.tag != null) {
+      list = list.filter((e) => Array.isArray(e.tags) && e.tags.includes(f.tag));
+    }
     return list;
   });
 
-  // 可见列表（列表区数据源）：搜索 + 筛选（等级/类型/分类）叠加后的结果
+  // 可见列表（列表区数据源）：搜索 + 筛选（等级/类型/分类/标签）叠加后的结果
   const visibleEntries = computed(() => baseList.value);
 
   const visibleCount = computed(() => visibleEntries.value.length);

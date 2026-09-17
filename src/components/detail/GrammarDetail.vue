@@ -4,6 +4,7 @@
 // en 模板无 usage_scene/notes 字段，overview 自动隐藏。
 import { computed } from "vue";
 import DetailSections from "./DetailSections.vue";
+import DetailMeta from "./DetailMeta.vue";
 
 const props = defineProps({
   entry: { type: Object, default: null },
@@ -28,6 +29,8 @@ const hasOverview = computed(() => Boolean(usageScene.value || notesText.value))
         <span class="ov-text">{{ notesText }}</span>
       </p>
     </div>
+
+    <DetailMeta :view="view" :entry="entry" />
 
     <DetailSections
       :template="set ? set.template : null"

@@ -1,7 +1,7 @@
 <script setup>
 // 学科包管理（Dash 式 Docsets 管理）
 // - 列出全部已发现学科包（含已停用的），展示来源（内置 / 用户）、版本、条目数、安装路径
-// - 导入：选择一个 *.knowledgeset 目录 → 校验 + 复制到用户知识根（dialog 不可用时可手输路径）
+// - 导入：选择一个 *.kpkg 文件（Studio 导出的单文件包）→ 校验 + 复制到用户知识根（也兼容手输 .knowledgeset 目录路径）
 // - 删除：用户包真删（内置同名包则回落）；内置包不可删，退化为「停用」
 // - 启用/停用：停用后不出现在学科列表与搜索中，但保留在管理面板可随时恢复
 // 任何变更后自动重载学科数据（knowledge_reload + 重新拉取），无需重启应用。
@@ -76,6 +76,32 @@ async function toggleEnabled(set) {
   }
 }
 
+/**
+ * 设为「当前使用的学科包」（与启用开关相互独立）：
+ * 点击后把 ui.activeSetId 切到该包（持久化 + 切到浏览态 + 自动选中首条），并提示。
+ * 停用的包不参与浏览，故若目标包处于停用态，先启用再切换。
+ */
+async function activate(set) {
+  if (!set.id || busyId.value) return;
+  if (set.id === ui.activeSetId) {
+    ui.showToast(`「${set.name}」就是当前使用的学科包`);
+    return;
+  }
+  busyId.value = set.id;
+  try {
+    if (!set.enabled) {
+      const res = await knowledge.setEnabled({ set_id: set.id, enabled: true });
+      sets.value = Array.isArray(res.sets) ? res.sets : sets.value;
+    }
+    ui.switchSet(set.id);
+    ui.showToast(`当前使用的学科包已更换为「${set.name}」`);
+  } catch (e) {
+    ui.showToast(`操作失败：${e?.message || e}`, 3000);
+  } finally {
+    busyId.value = "";
+  }
+}
+
 async function doRemove(set) {
   if (!set.id || busyId.value) return;
   busyId.value = set.id;
@@ -106,9 +132,9 @@ async function pickAndImport() {
       // 动态引入：未安装 dialog 插件时不阻塞页面加载
       const { open } = await import("@tauri-apps/plugin-dialog");
       const picked = await open({
-        directory: true,
         multiple: false,
-        title: "选择学科包目录（*.knowledgeset）",
+        filters: [{ name: "Knoasis 学科包", extensions: ["kpkg"] }],
+        title: "选择学科包文件（*.kpkg）",
       });
       if (!picked) return;
       src = Array.isArray(picked) ? String(picked[0]) : String(picked);
@@ -121,7 +147,7 @@ async function pickAndImport() {
   }
   loading.value = true;
   try {
-    const res = await knowledge.importSet({ src_dir: src });
+    const res = await knowledge.importSet({ src });
     manualPath.value = "";
     showManualImport.value = false;
     await afterChange(
@@ -188,7 +214,7 @@ onBeforeUnmount(() => {
           class="manual-input"
           type="text"
           spellcheck="false"
-          placeholder="输入学科包目录绝对路径，例如 /Users/you/Downloads/example.knowledgeset"
+          placeholder="输入 .kpkg 文件或 .knowledgeset 目录绝对路径，例如 /Users/you/Downloads/example.kpkg"
           @keydown.enter="pickAndImport"
         />
         <button class="btn" :disabled="!manualPath.trim() || loading" @click="pickAndImport">
@@ -200,14 +226,14 @@ onBeforeUnmount(() => {
 
       <div class="list">
         <div v-if="!sets.length && !loading" class="empty">
-          暂无学科包。可导入 *.knowledgeset 目录，或把包放入下方学科包目录后刷新。
+          暂无学科包。可导入 *.kpkg 文件（Studio 导出的单文件包），或把包放入下方学科包目录后刷新。
         </div>
 
         <div
           v-for="s in sets"
           :key="s.id"
           class="row"
-          :class="{ 'is-off': !s.enabled, 'is-busy': busyId === s.id }"
+          :class="{ 'is-off': !s.enabled, 'is-busy': busyId === s.id, 'is-active': s.id === ui.activeSetId }"
         >
           <button
             class="switch"
@@ -226,6 +252,7 @@ onBeforeUnmount(() => {
               <span class="badge">v{{ s.version }}</span>
               <span class="badge badge--ghost">{{ s.origin === "builtin" ? "内置" : "用户" }}</span>
               <span v-if="!s.enabled" class="badge badge--off">已停用</span>
+              <span v-if="s.id === ui.activeSetId" class="badge badge--active">当前</span>
             </div>
             <div class="row-meta">
               {{ s.entry_count }} 条 · {{ s.id }} ·
@@ -235,6 +262,12 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="row-side">
+            <button
+              class="btn btn--ghost"
+              :disabled="Boolean(busyId) || s.id === ui.activeSetId"
+              :title="s.id === ui.activeSetId ? '当前正在使用的学科包' : '设为当前使用的学科包'"
+              @click="activate(s)"
+            >{{ s.id === ui.activeSetId ? "当前使用中" : "设为当前" }}</button>
             <template v-if="confirmId === s.id">
               <button class="btn btn--danger" @click="doRemove(s)">确认删除</button>
               <button class="btn" @click="confirmId = ''">取消</button>
@@ -406,6 +439,19 @@ onBeforeUnmount(() => {
   opacity: 0.6;
 }
 
+/* 当前激活的学科包：高亮底色 + 左侧强调条 */
+.row.is-active {
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.row.is-active:hover {
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+}
+.row.is-active.is-off {
+  /* 理论上激活的包必为启用态（activate 会先启用），这里仅兜底避免样式冲突 */
+  opacity: 1;
+}
+
 /* 开关 */
 .switch {
   flex: none;
@@ -471,6 +517,11 @@ onBeforeUnmount(() => {
 .badge--off {
   background: color-mix(in srgb, var(--text-muted) 18%, transparent);
   color: var(--text-muted);
+}
+.badge--active {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .row-meta {
   margin-top: 4px;

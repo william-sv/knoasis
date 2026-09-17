@@ -13,7 +13,7 @@ import { useFavorites } from "../stores/favorites.js";
 import { useNotes } from "../stores/notes.js";
 import { useSearch } from "../stores/search.js";
 import { copyText, stripHtml, typeLabel, formatTime } from "../lib/format.js";
-import { findSetById, levelMetaForEntry } from "../lib/data-registry.js";
+import { findSetById } from "../lib/data-registry.js";
 import { knowledge as ipcKnowledge } from "../lib/ipc.js";
 import { toDetailView } from "../lib/grammar/adapter.js";
 import { exportGrammarMarkdown } from "../lib/grammar/export.js";
@@ -126,7 +126,7 @@ async function onCopy() {
   } else {
     const lines = [
       `# ${e.name}`,
-      `${findSetById(e.discipline) ? findSetById(e.discipline).name : e.discipline} · ${typeLabel(e.type)} · ${levelMetaForEntry(e).label}`,
+      `${findSetById(e.discipline) ? findSetById(e.discipline).name : e.discipline} · ${typeLabel(e.type)}`,
       "",
       e.summary,
       "",
@@ -150,42 +150,15 @@ function jumpRelated(item) {
   ui.jumpToEntry(item);
 }
 
-function metaOf(entry) {
-  const set = findSetById(entry.discipline);
-  const level = levelMetaForEntry(entry);
-  return {
-    set,
-    levelLabel: level.label,
-    typeLabel: typeLabel(entry.type),
-  };
-}
-
 // ---------- 顶部标签 → 联动筛选左侧列表 ----------
-// 点击「等级 / 类型 / 分类」→ 在当前学科范围内按该值筛选（再次点击取消）；
-// 点击「学科」→ 切换到该学科（再次点击回到全部）。激活态从 search.filters 派生。
-const entryLevelCode = computed(() =>
-  entry.value && entry.value.level ? entry.value.level.code : "",
-);
-const subjectActive = computed(
-  () => entry.value != null && ui.activeSetId === entry.value.discipline,
-);
-const levelActive = computed(
-  () => entry.value != null && search.filters.level === entryLevelCode.value,
-);
-const typeActive = computed(
-  () => entry.value != null && search.filters.type === entry.value.type,
-);
-const categoryActive = computed(
-  () => entry.value != null && search.filters.category === entry.value.category,
-);
-
 function toggleFilter(key, value) {
   search.setFilter(key, value);
 }
-
-function onSubjectChip() {
-  if (!entry.value) return;
-  ui.selectDiscipline(entry.value.discipline);
+function tagActive(t) {
+  return entry.value != null && search.filters.tag === t;
+}
+function toggleTag(t) {
+  search.setFilter("tag", t);
 }
 
 const noteSavedHint = computed(() => {
@@ -219,46 +192,14 @@ const katexOptions = {
         <div class="detail-head">
           <div class="meta-row">
             <div class="meta-tags">
-              <button
-                v-if="entry.discipline"
-                type="button"
-                class="chip chip--set chip--clickable"
-                :class="{ 'is-active': subjectActive }"
-                :title="subjectActive ? '取消筛选，回到全部学科' : `只看「${metaOf(entry).set ? metaOf(entry).set.name : entry.discipline}」`"
-                @click="onSubjectChip"
-              >
-                <span class="dot" :style="{ background: metaOf(entry).set ? metaOf(entry).set.color : 'var(--text-faint)' }"></span>
-                {{ metaOf(entry).set ? metaOf(entry).set.name : entry.discipline }}
-              </button>
-              <button
-                v-if="metaOf(entry).typeLabel"
-                type="button"
-                class="chip chip--clickable"
-                :class="{ 'is-active': typeActive }"
-                :title="typeActive ? '取消类型筛选' : `只看类型「${metaOf(entry).typeLabel}」`"
-                @click="toggleFilter('type', entry.type)"
-              >
-                {{ metaOf(entry).typeLabel }}
-              </button>
-              <button
-                type="button"
-                class="chip chip--level chip--clickable"
-                :class="{ 'is-active': levelActive }"
-                :title="levelActive ? '取消等级筛选' : `只看等级「${metaOf(entry).levelLabel}」`"
-                @click="toggleFilter('level', entryLevelCode)"
-              >
-                {{ metaOf(entry).levelLabel }}
-              </button>
-              <button
-                v-if="entry.category"
-                type="button"
-                class="chip chip--faint chip--clickable"
-                :class="{ 'is-active': categoryActive }"
-                :title="categoryActive ? '取消分类筛选' : `只看分类「${entry.category}」`"
-                @click="toggleFilter('category', entry.category)"
-              >
-                {{ entry.category }}
-              </button>
+              <span
+                v-for="t in (entry.tags || [])"
+                :key="t"
+                class="chip chip--faint chip--clickable chip--tag"
+                :class="{ 'is-active': tagActive(t) }"
+                :title="tagActive(t) ? '取消标签筛选' : `只看标签「${t}」`"
+                @click="toggleTag(t)"
+              >{{ t }}</span>
             </div>
             <div class="meta-actions">
               <button
@@ -394,11 +335,8 @@ const katexOptions = {
   margin-bottom: 6px;
 }
 .meta-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
+  position: relative;
+  min-height: 30px;
 }
 .meta-tags {
   display: flex;
@@ -406,8 +344,13 @@ const katexOptions = {
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
+  /* 预留右上角 收藏/复制 按钮宽度，tags 自行换行时不挤压按钮 */
+  padding-right: 78px;
 }
 .meta-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -419,16 +362,13 @@ const katexOptions = {
   font-size: 11px;
   line-height: 21px;
 }
-.chip--set {
-  color: var(--text);
-  font-weight: 600;
-  background: var(--chip-bg);
-}
-.chip--level {
-  font-weight: 600;
-}
 .chip--faint {
   color: var(--text-faint);
+}
+/* 详情页顶部 tags：可点击筛选（复用 chip--clickable 交互态） */
+.chip--tag {
+  display: inline-flex;
+  align-items: center;
 }
 /* 可点击标签（学科/类型/等级/分类）：交互态 + 明显选中态 */
 .chip--clickable {

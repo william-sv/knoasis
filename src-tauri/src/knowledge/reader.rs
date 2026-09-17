@@ -191,7 +191,9 @@ pub fn list_entries(meta: &KnowledgeSetMeta, f: &EntryFilter<'_>) -> CmdResult<L
          FROM entries",
     );
     sql.push_str(&where_sql);
-    sql.push_str(" ORDER BY COALESCE(category,''), headword, id LIMIT ?");
+    // 排序：优先 sort 序号（CAST 为整数，缺省/空回退到入库顺序 id），其次 headword 兜底；
+    // 不再按标题字母序，保证书目/目录顺序不丢失。
+    sql.push_str(" ORDER BY COALESCE(CAST(NULLIF(sort,'') AS INTEGER), id), headword, id LIMIT ?");
     let mut qpv = pv.clone();
     qpv.push(limit.into());
 

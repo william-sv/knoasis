@@ -1,5 +1,5 @@
 // Pinia store：useSearch
-// 职责：搜索词 / 命中结果 / loading 态（v1.3 §6 形状）+ 属性筛选（等级/类型/分类）。
+// 职责：搜索词 / 命中结果 / loading 态（v1.3 §6 形状）+ 属性筛选（等级/类型/分类/标签）。
 // IME 组合态在 TopToolbar 中处理（compositionstart/end 期间不触发 run），
 // 防抖 ~80ms 也在组件层完成；本 store 负责一次“真正执行”。
 //
@@ -12,9 +12,9 @@ import { searchEntries } from "../lib/search.js";
 import { useKnowledgeSets } from "./knowledgeSets.js";
 import { useUi } from "./ui.js";
 
-/** 筛选维度：等级（level code）/ 类型（type）/ 分类（category）；null = 未启用 */
+/** 筛选维度：等级（level code）/ 类型（type）/ 分类（category）/ 标签（tag）；null = 未启用 */
 function emptyFilters() {
-  return { level: null, type: null, category: null };
+  return { level: null, type: null, category: null, tag: null };
 }
 
 export const useSearch = defineStore("search", () => {
@@ -32,7 +32,8 @@ export const useSearch = defineStore("search", () => {
     () =>
       filters.value.level != null ||
       filters.value.type != null ||
-      filters.value.category != null,
+      filters.value.category != null ||
+      filters.value.tag != null,
   );
 
   // 执行搜索（同步，条目量小；将来替换为带 reqId 的 IPC 调用）
@@ -67,8 +68,8 @@ export const useSearch = defineStore("search", () => {
 
   /**
    * 设置 / 切换某维度筛选值（同值再次点击 → 取消该筛选，即 toggle）。
-   * @param {'level'|'type'|'category'} key
-   * @param {string} value 目标值（等级为 level code，含 '' 表示「未分级」）
+   * @param {'level'|'type'|'category'|'tag'} key
+   * @param {string} value 目标值（等级为 level code，含 '' 表示「未分级」；tag 为单个标签文本）
    */
   function setFilter(key, value) {
     if (!(key in filters.value)) return;

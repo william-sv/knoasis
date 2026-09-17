@@ -54,8 +54,8 @@ pub struct SetEnabledArgs {
 
 #[derive(Debug, Deserialize)]
 pub struct ImportSetArgs {
-    /// 源学科包目录（*.knowledgeset）
-    pub src_dir: String,
+    /// 导入源：*.kpkg 文件，或 *.knowledgeset 目录
+    pub src: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -259,7 +259,7 @@ pub fn knowledge_set_enabled(
 #[tauri::command]
 pub fn knowledge_import_set(app: AppHandle, args: ImportSetArgs) -> CmdResult<ImportReport> {
     let user = ensure_user_root(&app)?;
-    let src = PathBuf::from(args.src_dir.trim());
+    let src = PathBuf::from(args.src.trim());
     manager::import_package(&src, &user).map_err(ApiError::internal)
 }
 

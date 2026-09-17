@@ -8,13 +8,15 @@
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js src/lib/__tests__/shortcuts.test.js",
+    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js src/lib/__tests__/shortcuts.test.js src/lib/__tests__/markdown.test.js",
     "test:sfc": "node scripts/check-sfc.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@vscode/markdown-it-katex": "^1.1.2",
+    "markdown-it": "^15.0.2",
     "pinia": "^4.0.3",
     "vue": "^3.5.13",
     "vue3-katex": "^0.8.1"

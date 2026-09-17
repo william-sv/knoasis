@@ -16,6 +16,7 @@ use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::fs;
+use std::fs::File;
 use std::path::{Path, PathBuf};
 
 /// 停用标记文件名（位于用户知识根）
@@ -197,22 +198,97 @@ fn tmp_dir_name(set_id: &str) -> String {
     format!(".tmp-import-{set_id}-{now}")
 }
 
+/// 导入源规整：把任意导入源解析成「.knowledgeset 目录」+ 是否需要事后清理的临时目录。
+///  - 目录（含 .knowledgeset 与任意目录）→ 原样返回，无需清理
+///  - .kpkg 文件 → 解包到临时目录 `<temp>/<stem>.knowledgeset`，返回该目录 + 清理标记
+///  - 其它 → 报错
+fn resolve_import_src(src: &Path) -> Result<(PathBuf, Option<PathBuf>), String> {
+    if src.is_file() {
+        let ext = src
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        if ext != "kpkg" {
+            return Err(
+                "不支持的导入文件类型（请选择 .kpkg 文件或 .knowledgeset 目录）".to_string(),
+            );
+        }
+        let stem = src
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .ok_or_else(|| "无法解析 .kpkg 文件名".to_string())?
+            .to_string();
+        let tmp = std::env::temp_dir().join(format!("{stem}.knowledgeset"));
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(&tmp).map_err(|e| format!("创建解包临时目录失败: {e}"))?;
+        unzip_to_dir(src, &tmp)?;
+        return Ok((tmp.clone(), Some(tmp)));
+    }
+    if src.is_dir() {
+        return Ok((src.to_path_buf(), None));
+    }
+    Err(format!("导入源不存在: {}", src.display()))
+}
+
+/// 将 .kpkg（内部 zip）解包到 dest，路径做 zip-slip 防护（跳过 enclosed_name 越界项）。
+fn unzip_to_dir(kpkg: &Path, dest: &Path) -> Result<(), String> {
+    let file = File::open(kpkg).map_err(|e| format!("打开 .kpkg 失败: {e}"))?;
+    let mut archive = zip::ZipArchive::new(file)
+        .map_err(|e| format!("解析 .kpkg 失败（不是有效的包文件）: {e}"))?;
+    for i in 0..archive.len() {
+        let mut zf = archive
+            .by_index(i)
+            .map_err(|e| format!("读取 .kpkg 条目失败: {e}"))?;
+        let rel = match zf.enclosed_name() {
+            Some(p) => p.to_path_buf(),
+            None => continue, // zip-slip 防护：跳过非法路径
+        };
+        let outpath = dest.join(&rel);
+        if zf.is_dir() {
+            fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
+        } else {
+            if let Some(parent) = outpath.parent() {
+                fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            let mut outfile = File::create(&outpath).map_err(|e| e.to_string())?;
+            std::io::copy(&mut zf, &mut outfile).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(())
+}
+
 /// 导入学科包到用户知识根：校验 → 复制到临时目录 → 副本自检 → 替换目标。
 /// 任何一步失败都会清掉临时目录并返回错误（不留半包）。
+///
+/// 入参 `src` 支持两种形态：
+///  - 目录 `<id>.knowledgeset`（旧式，仍兼容）
+///  - 单个文件 `<id>.kpkg`（Studio 导出，内部为 zip；自动解包后再走目录逻辑）
 pub fn import_package(src: &Path, user_root: &Path) -> Result<ImportReport, String> {
-    let parsed = validate_importable(src)?;
+    let (dir, extract_tmp) = resolve_import_src(src)?;
+    let report = import_package_from_dir(&dir, user_root);
+    // 若源是 .kpkg 解出的临时目录，无论成败都清理，避免留下半包
+    if let Some(t) = &extract_tmp {
+        let _ = fs::remove_dir_all(t);
+    }
+    report
+}
+
+/// `import_package` 的核心：入参已是「.knowledgeset 目录」，执行校验与安装。
+fn import_package_from_dir(dir: &Path, user_root: &Path) -> Result<ImportReport, String> {
+    let parsed = validate_importable(dir)?;
     fs::create_dir_all(user_root)
         .map_err(|e| format!("创建用户知识根 {} 失败: {e}", user_root.display()))?;
 
     let dst = user_root.join(format!("{}.knowledgeset", parsed.set_id));
-    if same_path(src, &dst) {
+    if same_path(dir, &dst) {
         return Err("该学科包已安装在用户目录，无需导入".to_string());
     }
 
     let replaced = dst.exists();
     let tmp = user_root.join(tmp_dir_name(&parsed.set_id));
     let _ = fs::remove_dir_all(&tmp);
-    if let Err(e) = copy_dir_all(src, &tmp) {
+    if let Err(e) = copy_dir_all(dir, &tmp) {
         let _ = fs::remove_dir_all(&tmp);
         return Err(e);
     }
