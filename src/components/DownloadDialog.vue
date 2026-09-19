@@ -1,79 +1,19 @@
 <script setup>
-// 学科包下载（演示数据弹窗）
+// 学科包下载（弹窗）
 // - 左侧窄列：学科列表（点击切换 + 选中高亮）
 // - 右侧：当前学科的版本包列表（版本号 / 条目数 / 包大小 / 更新日期 + [下载]）
-// - 下载按钮仅为交互演示：变「下载中…」约 0.8s 后 toast 提示尚未接入真实下载源
-// 说明：以下 SUBJECTS 为组件内常量假数据，日后接入真实下载源时替换即可。
+// - 真实下载源接入前：SUBJECTS 为空，弹窗展示「下载源尚未接入」空态，不展示任何假数据。
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useUi } from "../stores/ui.js";
 
 const ui = useUi();
 
-/** 演示用学科包目录（结构清晰，便于日后替换真实源）
- *
- * 说明：以下均为中性示例数据，不对应任何真实可下载的学科包；接入真实下载源时整体替换。
- */
-const SUBJECTS = [
-  {
-    id: "sample-set-a",
-    name: "示例学科 A",
-    color: "#2f9e77",
-    packages: [
-      { version: "v1.2.0", entries: 1280, size: "3.4 MB", updatedAt: "2026-08-30" },
-      { version: "v1.1.0", entries: 1190, size: "3.1 MB", updatedAt: "2026-06-12" },
-      { version: "v1.0.0", entries: 1024, size: "2.8 MB", updatedAt: "2026-03-01" },
-    ],
-  },
-  {
-    id: "sample-set-b",
-    name: "示例学科 B",
-    color: "#2563eb",
-    packages: [
-      { version: "v2.0.1", entries: 2140, size: "5.7 MB", updatedAt: "2026-09-02" },
-      { version: "v2.0.0", entries: 2103, size: "5.6 MB", updatedAt: "2026-07-18" },
-    ],
-  },
-  {
-    id: "sample-set-c",
-    name: "示例学科 C",
-    color: "#e5484d",
-    packages: [
-      { version: "v1.3.2", entries: 980, size: "2.9 MB", updatedAt: "2026-08-21" },
-      { version: "v1.2.0", entries: 940, size: "2.7 MB", updatedAt: "2026-05-30" },
-    ],
-  },
-  {
-    id: "sample-set-d",
-    name: "示例学科 D",
-    color: "#7c3aed",
-    packages: [
-      { version: "v1.0.4", entries: 760, size: "4.2 MB", updatedAt: "2026-07-11" },
-      { version: "v1.0.0", entries: 720, size: "4.0 MB", updatedAt: "2026-04-02" },
-    ],
-  },
-  {
-    id: "sample-set-e",
-    name: "示例学科 E",
-    color: "#0891b2",
-    packages: [
-      { version: "v1.1.0", entries: 540, size: "3.6 MB", updatedAt: "2026-08-09" },
-      { version: "v1.0.0", entries: 512, size: "3.3 MB", updatedAt: "2026-02-20" },
-    ],
-  },
-  {
-    id: "sample-set-f",
-    name: "示例学科 F",
-    color: "#d97706",
-    packages: [
-      { version: "v1.0.2", entries: 610, size: "3.9 MB", updatedAt: "2026-07-25" },
-      { version: "v1.0.0", entries: 588, size: "3.7 MB", updatedAt: "2026-03-15" },
-    ],
-  },
-];
+// 学科包目录：真实数据由后端/下载接口填充；当前无可用目录（不内置任何示例/假数据）。
+const SUBJECTS = [];
 
-const activeId = ref(SUBJECTS[0].id);
+const activeId = ref(SUBJECTS[0]?.id ?? null);
 const activeSubject = computed(
-  () => SUBJECTS.find((s) => s.id === activeId.value) || SUBJECTS[0],
+  () => SUBJECTS.find((s) => s.id === activeId.value) || SUBJECTS[0] || null,
 );
 
 /** 正在下载的包 key（`${subjectId}:${version}`），同时只允许一个进行中 */
@@ -86,10 +26,10 @@ function isDownloading(subject, pkg) {
 function doDownload(subject, pkg) {
   if (downloading.value) return;
   downloading.value = `${subject.id}:${pkg.version}`;
-  // 演示：0.8s 后结束并提示尚未接入真实下载
+  // 接入真实下载源前的占位交互：0.8s 后提示尚未接入
   setTimeout(() => {
     downloading.value = "";
-    ui.showToast("演示数据：下载功能尚未接入");
+    ui.showToast("下载源尚未接入，敬请期待");
   }, 800);
 }
 
@@ -108,13 +48,13 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <header class="modal-head">
         <div class="modal-head-main">
           <div class="modal-title">学科包下载</div>
-          <div class="modal-sub">浏览可用的学科知识包（演示数据）</div>
+          <div class="modal-sub">浏览可用的学科知识包</div>
         </div>
         <!-- 关闭按钮固定右上角 -->
         <button class="icon-btn modal-close" title="关闭" @click="ui.closeDownload()">✕</button>
       </header>
 
-      <div class="modal-body">
+      <div v-if="activeSubject" class="modal-body">
         <!-- 左侧学科列表 -->
         <aside class="subjects">
           <button
@@ -153,6 +93,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
             该学科暂无可下载的版本包。
           </div>
         </section>
+      </div>
+
+      <div v-else class="modal-body modal-body--empty">
+        下载源尚未接入，学科包目录即将上线。
       </div>
     </div>
   </div>
@@ -346,5 +290,14 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
   text-align: center;
   font-size: 12px;
   color: var(--text-faint);
+}
+
+/* 无可用目录（下载源尚未接入）空态 */
+.modal-body--empty {
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-align: center;
 }
 </style>

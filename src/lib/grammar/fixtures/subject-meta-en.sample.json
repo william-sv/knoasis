@@ -13,6 +13,6 @@
   ],
   "types": [{ "value": "grammar", "label": "语法" }],
   "template": null,
-  "counts": { "total": 382, "by_level": { "I": 121, "II": 137, "III": 124 } },
-  "description": "英语语法 · 21 类 / 382 条语法点 · 740 张图解"
+  "counts": { "total": 0, "by_level": { "I": 0, "II": 0, "III": 0 } },
+  "description": "英语语法（数据待补充）"
 }

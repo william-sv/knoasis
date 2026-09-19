@@ -19,6 +19,9 @@ src-tauri/target*/
 # 与随包资源 src-tauri/resources/grammar/grammar.db 重复，属可再生的派生数据，不纳入版本库。
 data/
 
+# 导入器产出的可分发学科包（.knowledgeset / .kpkg），由用户在 app 内导入安装，属派生数据。
+out/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -5,172 +5,64 @@
     "headwordLabel": "语法",
     "sections": [
       {
-        "key": "detail",
+        "key": "meta",
         "label": "语法信息",
-        "type": "fields",
-        "fields": [
-          {
-            "key": "pattern",
-            "label": "语法"
-          },
-          {
-            "key": "variants",
-            "label": "异形/变体"
-          },
-          {
-            "key": "form_rule",
-            "label": "构成规则"
-          },
-          {
-            "key": "attaches_to",
-            "label": "接续对象"
-          },
-          {
-            "key": "speech_style",
-            "label": "语体"
-          },
-          {
-            "key": "politeness",
-            "label": "敬语"
-          },
-          {
-            "key": "register",
-            "label": "口语/书面"
-          },
-          {
-            "key": "difficulty",
-            "label": "难度"
-          },
-          {
-            "key": "frequency",
-            "label": "频率"
-          }
-        ]
+        "type": "meta",
+        "_note": "头部元数据条由 GrammarDetail 挂载 DetailMeta 渲染（pos/speechLevel/level/aliases/sources/category/id），本段为占位声明，DetailSections 跳过"
       },
       {
-        "key": "meanings",
-        "label": "意思",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "meaning_zh",
-            "label": "中文"
-          },
-          {
-            "key": "meaning_ko",
-            "label": "韩文"
-          },
-          {
-            "key": "note",
-            "label": "备注"
-          }
-        ]
+        "key": "explanation",
+        "label": "完整讲解",
+        "type": "paragraph",
+        "fieldKey": "explanation"
       },
       {
-        "key": "usages",
-        "label": "使用方法",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "title",
-            "label": "用法"
-          },
-          {
-            "key": "usage_zh",
-            "label": "说明"
-          },
-          {
-            "key": "form",
-            "label": "形式"
-          }
-        ]
-      },
-      {
-        "key": "scenes",
-        "label": "使用场景",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "scene",
-            "label": "场景"
-          },
-          {
-            "key": "note",
-            "label": "备注"
-          }
-        ]
+        "key": "connections_grouped",
+        "label": "语法用法详解（活用 / 接续规则）",
+        "type": "connections_grouped",
+        "_note": "按 attachesTo 分 动词/形容词/名词 三块；每块含 接续公式 + 形态实现(realizations) + 实例 + 语义 + 时态"
       },
       {
         "key": "examples",
-        "label": "例句（双语）",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "ko",
-            "label": "韩语"
-          },
-          {
-            "key": "zh",
-            "label": "中文"
-          },
-          {
-            "key": "note",
-            "label": "备注"
-          }
-        ]
+        "label": "例句",
+        "type": "examples"
       },
       {
-        "key": "cautions",
-        "label": "注意事项",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "caution",
-            "label": "注意点"
-          },
-          {
-            "key": "wrong",
-            "label": "误"
-          },
-          {
-            "key": "right",
-            "label": "正"
-          }
-        ]
+        "key": "common_errors",
+        "label": "易错点",
+        "type": "common_errors"
       },
       {
-        "key": "collocations",
-        "label": "常见搭配",
+        "key": "similar",
+        "label": "近似语法",
+        "type": "similar"
+      },
+      {
+        "key": "antonyms",
+        "label": "相反语法",
+        "type": "antonyms",
+        "_note": "模块已具备：运行时读 view.antonyms，无值/缺字段则整节隐藏，有值则按 headword+difference 显示。v11 当前无相反语法数据字段。"
+      },
+      {
+        "key": "senses",
+        "label": "义项",
         "type": "list",
         "itemFields": [
           {
-            "key": "word",
-            "label": "搭配"
+            "key": "sense",
+            "label": "义项"
           },
           {
-            "key": "note",
-            "label": "备注"
+            "key": "usage",
+            "label": "说明与例证"
           }
         ]
       },
       {
         "key": "related",
-        "label": "近似语法",
-        "type": "list",
-        "itemFields": [
-          {
-            "key": "headword",
-            "label": "语法"
-          },
-          {
-            "key": "relation",
-            "label": "关系"
-          },
-          {
-            "key": "note",
-            "label": "区别"
-          }
-        ]
+        "label": "相关语法",
+        "type": "related",
+        "_note": "v11 related 字符串数组：内部 ko… 已映射为 app uid（可点击跳转），外部 ext:概念 原样展示。v11 无独立「相反语法」字段，本段覆盖近似/相关关联"
       }
     ]
   },

@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
       <SetManagerDialog v-if="ui.setsManagerOpen" />
     </Transition>
 
-    <!-- 学科包下载（演示数据） -->
+    <!-- 学科包下载 -->
     <Transition name="fade">
       <DownloadDialog v-if="ui.downloadOpen" />
     </Transition>

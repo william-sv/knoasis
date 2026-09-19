@@ -1,12 +1,13 @@
 <script setup>
-// 详情 · 头部元数据条（v8 新增）：中文术语 / 词性(품사) / 语体(register) / 等级 / 别名 / 出处
-// 优先读 view（content 透传，含导入器并入的 term_cn/type/register/aliases/sources），
-// 回退到 entry（level 等条目级字段）。
+// 详情 · 头部元数据条（v11）：词类(pos) / 形态细类(type) / 句式层级(speechLevel) / 等级 / 别名 / 出处 / 分类 / ID
+// 优先读 view（content 透传，导入器已把条目级字段并入 content），回退 entry。
+// 等级 label 由 set.levels 按 code 反查（entry.level 仅含 code/rank）。
 import { computed } from "vue";
 
 const props = defineProps({
   view: { type: Object, default: null },
   entry: { type: Object, default: null },
+  set: { type: Object, default: null },
 });
 
 function isEmpty(v) {
@@ -29,12 +30,20 @@ function fromEntry(...keys) {
   return null;
 }
 
-const termCn = computed(() => fromView("term_cn") || fromEntry("term_cn"));
-const pos = computed(() => fromView("type") || fromEntry("type"));
-const register = computed(() => fromView("register") || fromEntry("register"));
+const pos = computed(() => fromView("pos") || fromEntry("pos"));
+const typeFine = computed(() => fromView("type") || fromEntry("type"));
+const speechLevel = computed(() => fromView("speechLevel") || fromEntry("speechLevel"));
+
+// 等级 label：优先 set.levels 按 code 反查，回退 entry.level.label / code
 const levelLabel = computed(() => {
-  const lvl = props.entry && props.entry.level;
-  return lvl && lvl.label ? lvl.label : "";
+  const e = props.entry || {};
+  const lvl = e.level || {};
+  const code = lvl.code || "";
+  if (props.set && Array.isArray(props.set.levels)) {
+    const hit = props.set.levels.find((l) => l.code === code);
+    if (hit && hit.label) return hit.label;
+  }
+  return lvl.label || code || "";
 });
 
 const aliases = computed(() => {
@@ -42,39 +51,49 @@ const aliases = computed(() => {
   if (Array.isArray(a)) return a.filter((x) => !isEmpty(x));
   return a ? [String(a)] : [];
 });
+
+// sources: v11 [{type,ref}] → "type: ref"；兼容旧字符串形式
 const sources = computed(() => {
   const s = fromView("sources") || fromEntry("sources");
-  if (Array.isArray(s)) return s.filter((x) => !isEmpty(x));
-  return s ? [String(s)] : [];
-});
-const category = computed(() => fromEntry("category") || fromView("category"));
-// 稳定 ID：优先 entry.uid，回退 entry.id
-const entryId = computed(() => {
-  const e = props.entry || {};
-  return e.uid || e.id || "";
+  if (!Array.isArray(s)) return s ? [String(s)] : [];
+  return s
+    .map((x) => {
+      if (x && typeof x === "object") {
+        const type = !isEmpty(x.type) ? String(x.type) : "";
+        const ref = !isEmpty(x.ref) ? String(x.ref) : "";
+        return [type, ref].filter(Boolean).join(": ");
+      }
+      return isEmpty(x) ? "" : String(x);
+    })
+    .filter(Boolean);
 });
 
-const show = computed(
-  () =>
-    Boolean(
-      termCn.value ||
-        pos.value ||
-        register.value ||
-        levelLabel.value ||
-        aliases.value.length ||
-        sources.value.length ||
-        category.value ||
-        entryId.value,
-    ),
+const category = computed(() => fromEntry("category") || fromView("category"));
+// 稳定 ID：优先 v11 数据集 id（ko…），回退 entry.uid
+const entryId = computed(
+  () => fromView("id") || (props.entry && (props.entry.uid || props.entry.id)) || "",
+);
+
+const show = computed(() =>
+  Boolean(
+    pos.value ||
+      typeFine.value ||
+      speechLevel.value ||
+      levelLabel.value ||
+      aliases.value.length ||
+      sources.value.length ||
+      category.value ||
+      entryId.value,
+  ),
 );
 </script>
 
 <template>
   <div v-if="show" class="dmeta">
-    <p v-if="termCn" class="dmeta-cn">{{ termCn }}</p>
-    <div v-if="pos || register || levelLabel" class="dmeta-chips">
+    <div v-if="pos || typeFine || speechLevel || levelLabel" class="dmeta-chips">
       <span v-if="pos" class="dm-chip dm-pos">{{ pos }}</span>
-      <span v-if="register" class="dm-chip dm-reg">{{ register }}</span>
+      <span v-if="typeFine" class="dm-chip dm-type">{{ typeFine }}</span>
+      <span v-if="speechLevel" class="dm-chip dm-speech">{{ speechLevel }}</span>
       <span v-if="levelLabel" class="dm-chip dm-level">{{ levelLabel }}</span>
     </div>
     <p v-if="aliases.length" class="dmeta-line">
@@ -99,13 +118,6 @@ const show = computed(
   flex-direction: column;
   gap: 7px;
 }
-.dmeta-cn {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-muted);
-  letter-spacing: 0.3px;
-}
 .dmeta-chips {
   display: flex;
   flex-wrap: wrap;
@@ -128,8 +140,12 @@ const show = computed(
   background: color-mix(in srgb, var(--accent) 10%, var(--panel));
   font-weight: 600;
 }
-.dm-reg {
+.dm-type {
   color: var(--text-muted);
+}
+.dm-speech {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
 }
 .dm-level {
   color: var(--text);

@@ -17,6 +17,8 @@ import DetailMeta from "./DetailMeta.vue";
 import DetailTable from "./DetailTable.vue";
 import DetailExamples from "./DetailExamples.vue";
 import DetailErrors from "./DetailErrors.vue";
+import DetailConnections from "./DetailConnections.vue";
+import DetailRelatedChips from "./DetailRelatedChips.vue";
 
 defineProps({
   template: { type: Object, default: null }, // set.template（kr_grammar / en_grammar 段）
@@ -49,6 +51,11 @@ const COLUMN_SETS = {
   ],
   similar: [
     { key: "headword", label: "近义" },
+    { key: "difference", label: "辨析" },
+  ],
+  // 相反语法：模块已具备，view.antonyms 无值则整节隐藏（v11 当前无该字段）
+  antonyms: [
+    { key: "headword", label: "相反" },
     { key: "difference", label: "辨析" },
   ],
 };
@@ -88,7 +95,7 @@ function isRelatedArray(view) {
   <div class="detail-sections">
     <template v-if="template && template.sections && template.sections.length">
       <template v-for="section in template.sections" :key="section.key">
-        <!-- meta：头部元数据条（term_cn/품사/register/别名/出处），由 GrammarDetail 挂载，这里跳过 -->
+        <!-- meta：头部元数据条由 GrammarDetail 挂载，这里跳过 -->
         <template v-if="section.type === 'meta'"></template>
 
         <!-- fields：字段组 -->
@@ -122,9 +129,23 @@ function isRelatedArray(view) {
           :format="section.format"
         />
 
-        <!-- connections / patterns / similar：二维子表 -->
+        <!-- connections_grouped：语法用法详解，按 动词/形容词/名词 三块分组（v11） -->
+        <DetailConnections
+          v-else-if="section.type === 'connections_grouped'"
+          :label="section.label"
+          :connections="view && Array.isArray(view.connections) ? view.connections : []"
+        />
+
+        <!-- related（v11 字符串数组）：内部 uid 可跳转 + 外部 ext: 概念 chip -->
+        <DetailRelatedChips
+          v-else-if="section.type === 'related'"
+          :label="section.label"
+          :related="view && Array.isArray(view.related) ? view.related : []"
+        />
+
+        <!-- connections / patterns / similar / antonyms：二维子表（空行/空数组整节隐藏） -->
         <DetailTable
-          v-else-if="['connections', 'patterns', 'similar'].includes(section.type)"
+          v-else-if="['connections', 'patterns', 'similar', 'antonyms'].includes(section.type)"
           :label="section.label"
           :columns="COLUMN_SETS[section.type]"
           :rows="rowsFor(section)"

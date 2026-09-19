@@ -16,6 +16,15 @@ const shown = computed(() =>
     ? props.items.filter((e) => !isBlank(e.wrong) || !isBlank(e.right))
     : [],
 );
+
+// v11 common_errors 稀疏扩展字段（type/level/register，仅少量条目有）→ 有值即展示，不遗漏数据
+function metaBadges(e) {
+  const out = [];
+  for (const k of ["type", "level", "register"]) {
+    if (!isBlank(e && e[k])) out.push(String(e[k]));
+  }
+  return out;
+}
 </script>
 
 <template>
@@ -29,6 +38,9 @@ const shown = computed(() =>
           <span class="err-right">{{ e.right }}</span>
         </div>
         <p v-if="!isBlank(e.note)" class="err-note">{{ e.note }}</p>
+        <div v-if="metaBadges(e).length" class="err-meta">
+          <span v-for="(b, bi) in metaBadges(e)" :key="bi" class="err-badge">{{ b }}</span>
+        </div>
       </article>
     </div>
   </section>
@@ -81,5 +93,19 @@ const shown = computed(() =>
   font-size: 11.5px;
   line-height: 1.6;
   color: var(--text-faint);
+}
+.err-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+}
+.err-badge {
+  font-size: 10px;
+  line-height: 16px;
+  padding: 0 6px;
+  border-radius: 4px;
+  color: var(--text-faint);
+  background: var(--chip-bg);
 }
 </style>

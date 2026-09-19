@@ -65,7 +65,7 @@ export const useUi = defineStore("ui", () => {
   const panel = ref(null); // null | 'favorites'
   const toast = ref(null); // { id, message }
   const setsManagerOpen = ref(false); // 学科包管理弹窗（导入/删除/启用停用）
-  const downloadOpen = ref(false); // 学科包下载弹窗（演示数据）
+  const downloadOpen = ref(false); // 学科包下载弹窗
 
   // 监听系统主题变化（仅在跟随系统时生效）
   let mql = null;
@@ -229,7 +229,7 @@ export const useUi = defineStore("ui", () => {
     setsManagerOpen.value = false;
   }
 
-  // ---- 学科包下载弹窗（演示数据） ----
+  // ---- 学科包下载弹窗 ----
   function openDownload() {
     downloadOpen.value = true;
   }

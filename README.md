@@ -1,7 +1,14 @@
-# Tauri + Vue 3
+# Knoasis
 
-This template should help get you started developing with Tauri + Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+<img src="src-tauri/icons/icon.png" width="96" alt="Knoasis logo">
 
-## Recommended IDE Setup
+## 技术栈 / Tech Stack
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- **前端**：Vue 3 + Vite + Pinia
+- **后端**：Rust / Tauri v2（IPC）
+- **渲染**：markdown-it + KaTeX
+- **数据**：SQLite（`.knowledgeset` 知识包）
+
+## 许可证 / License
+
+[MIT](LICENSE)

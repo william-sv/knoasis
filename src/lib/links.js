@@ -5,9 +5,8 @@
 
 import { isTauri } from "./ipc.js";
 
-/** 用户指南外部文档地址（占位地址，待上线前替换为真实仓库） */
-// TODO: 上线前把 <your-github-account> 换成真实仓库地址（用户指南文档路径：docs/user-guide.md）
-export const USER_GUIDE_URL = "https://github.com/<your-github-account>/knoasis/blob/main/docs/user-guide.md";
+/** 用户指南外部文档地址（应用内「用户指南」按钮跳转；文档路径：docs/user-guide.md） */
+export const USER_GUIDE_URL = "https://github.com/william-sv/knoasis/blob/main/docs/user-guide.md";
 
 /**
  * 在系统默认浏览器中打开外部链接。

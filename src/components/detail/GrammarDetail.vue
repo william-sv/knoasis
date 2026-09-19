@@ -30,7 +30,7 @@ const hasOverview = computed(() => Boolean(usageScene.value || notesText.value))
       </p>
     </div>
 
-    <DetailMeta :view="view" :entry="entry" />
+    <DetailMeta :view="view" :entry="entry" :set="set" />
 
     <DetailSections
       :template="set ? set.template : null"

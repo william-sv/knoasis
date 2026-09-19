@@ -110,7 +110,7 @@ const EN_PROFILE: SubjectProfile = SubjectProfile {
     detail_table: "en_grammar_detail",
     summary_expr: "COALESCE(d.summary,'')",
     search_extra_col: "COALESCE(d.explanation,'')",
-    description: "英语语法 · 21 类 / 382 条语法点 · 740 张图解",
+    description: "英语语法（数据待补充）",
 };
 
 /// 取学科布局；未知学科返回 None（list_sets 对未知学科走既有通用分支）。

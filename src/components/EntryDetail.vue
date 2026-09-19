@@ -120,7 +120,10 @@ async function onCopy() {
     if (!currentView.value && !detailBusy.value) await loadDetail(e.uid);
     const view = currentView.value;
     const text = view
-      ? exportGrammarMarkdown(e, activeSet.value, view)
+      ? exportGrammarMarkdown(e, activeSet.value, view, (uid) => {
+          const t = ks.entryByUid.get(uid);
+          return t ? t.name : null;
+        })
       : `# ${e.name}\n${e.summary || ""}`;
     ok = await copyText(text);
   } else {

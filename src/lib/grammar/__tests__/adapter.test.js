@@ -86,31 +86,72 @@ test("toSetShape 把 SubjectMeta 归一为 UI set 形状（id/discipline=kr-gram
   assert.equal(set.counts.by_level["II"], 170);
 });
 
-test("toDetailView 透传 content（fields/lists/related 键与模板字段对齐），images 规范化为 []", () => {
-  const payload = loadFixture("detail-payload.sample.json");
+test("toDetailView 透传 v11 content（条目级字段并入 + paragraphs/connections/lists/similar/common_errors/related 字符串数组），images 规范化为 []", () => {
+  const payload = {
+    uid: "kr-grammar:aaaa11112222",
+    set_id: "kr-grammar",
+    headword: "아/어/여서",
+    category: "连接语尾",
+    level_code: "I",
+    level_label: "TOPIK I",
+    tags: ["原因(이유)"],
+    summary: "因为……所以……",
+    content: {
+      // 条目级字段由导入器并入 content（Rust get_entry 不返回这些）
+      id: "korozc5ni4cgc2",
+      type: "어미",
+      pos: "어미",
+      speechLevel: "",
+      aliases: ["-아/어/여서"],
+      sources: [{ type: "nikl", ref: "표준국어대사전" }],
+      related: ["kr-grammar:0c32ab5b7b4e", "ext:정말"],
+      paragraphs: { explanation: "元音ㅏ/ㅗ 后接 -아서。" },
+      connections: [
+        {
+          attachesTo: "verb",
+          requiredForm: "동사 어간 + 아/어/여서",
+          example: "가서",
+          realizations: [{ stem: "가다", ko: "가서" }],
+        },
+      ],
+      lists: {
+        examples: [{ ko: "가서", zh: "去然后", note: "", audio: "" }],
+        senses: [{ sense: "顺序", usage: "…" }],
+      },
+      similar: [{ headword: "-고", difference: "…" }],
+      antonyms: [],
+      common_errors: [{ wrong: "w", right: "r", note: "n" }],
+      images: [],
+    },
+    images: [],
+  };
   const view = toDetailView(payload);
-  // 模板 fields 的所有 key 都应在 view.fields 中可读（content 透传保证）
+  // 条目级字段透传
+  assert.equal(view.id, "korozc5ni4cgc2");
+  assert.equal(view.pos, "어미");
+  assert.deepEqual(view.aliases, ["-아/어/여서"]);
+  assert.deepEqual(view.sources, [{ type: "nikl", ref: "표준국어대사전" }]);
+  assert.deepEqual(view.related, ["kr-grammar:0c32ab5b7b4e", "ext:정말"]);
+  // 教学主体透传
+  assert.equal(view.paragraphs.explanation, "元音ㅏ/ㅗ 后接 -아서。");
+  assert.equal(view.connections[0].attachesTo, "verb");
+  assert.equal(view.lists.examples.length, 1);
+  assert.equal(view.lists.senses.length, 1);
+  assert.equal(view.similar[0].headword, "-고");
+  assert.equal(view.common_errors[0].right, "r");
+  // 模板 sections 的取数键均可在 view 中命中（契约对齐）
   const template = loadRealTemplate();
-  const fieldSection = template.sections.find((s) => s.type === "fields");
-  for (const f of fieldSection.fields) {
-    assert.ok(f.key in view.fields, `view.fields 缺少模板 key: ${f.key}`);
+  const fetch = (s) => {
+    if (s.type === "meta") return true;
+    if (s.type === "paragraph") return (view.paragraphs || {})[s.fieldKey || s.key];
+    if (s.type === "connections_grouped") return view.connections;
+    if (s.type === "examples" || s.type === "list") return (view.lists || {})[s.key];
+    if (s.type === "related") return view.related;
+    return view[s.key];
+  };
+  for (const s of template.sections) {
+    assert.ok(fetch(s) !== undefined, `view 缺少模板取数键: ${s.type}.${s.key}`);
   }
-  // content 原样透传
-  assert.equal(view.fields.pattern, "-기 때문에");
-  assert.equal(view.fields.form_rule, "动词词干 + -기 때문에");
-  assert.deepEqual(view.fields.variants, ["-기 때문이에요"]);
-  assert.deepEqual(view.fields.attaches_to, ["动词", "形容词"]);
-  assert.equal(view.fields.usage_scene, "书面与口语均常用，强调原因时可用。");
-  // lists / related
-  assert.equal(view.lists.meanings.length, 1);
-  assert.equal(view.lists.usages.length, 1);
-  assert.equal(view.lists.examples.length, 2);
-  assert.equal(view.lists.cautions.length, 1);
-  assert.equal(view.lists.collocations.length, 1);
-  assert.equal(view.related.resolved.length, 1);
-  assert.equal(view.related.resolved[0].headword, "-느라고");
-  assert.equal(view.related.pending.length, 2);
-  assert.equal(view.related.pending[0].targetText, "-아/어서");
   // images：无图学科 → []
   assert.deepEqual(view.images, []);
 });
@@ -124,42 +165,92 @@ test("toDetailView 容错：content/images 缺失不抛错，返回空壳", () =
   });
 });
 
-test("exportGrammarMarkdown 用模板 label 生成全部有值节、隐藏空节、包含未收录折叠", () => {
-  const payload = loadFixture("detail-payload.sample.json");
-  const view = toDetailView(payload);
+test("exportGrammarMarkdown 用 v11 模板 label 生成全部有值节、隐藏空节、related 字符串解析", () => {
   const template = loadRealTemplate();
-  const setMeta = loadFixture("subject-meta.sample.json");
-  const set = { ...toSetShape(setMeta), template };
-  const entry = {
-    name: payload.headword,
-    summary: payload.summary,
-    category: payload.category,
-    level: { code: payload.level_code },
+  const view = {
+    id: "korozc5ni4cgc2",
+    type: "어미",
+    pos: "어미",
+    aliases: ["-아/어/여서"],
+    sources: [{ type: "nikl", ref: "표준국어대사전" }],
+    related: ["kr-grammar:0c32ab5b7b4e", "ext:정말"],
+    paragraphs: { explanation: "完整讲解文本。" },
+    connections: [
+      {
+        attachesTo: "verb",
+        requiredForm: "동사 어간 + 아/어/여서",
+        example: "가서",
+        realizations: [
+          { stem: "가다", ko: "가서" },
+          { stem: "하다", ko: "해서", irregularity: "ha-irr" },
+        ],
+        meaning: "表顺序",
+      },
+      { attachesTo: "noun", requiredForm: "N + 이어서", example: "학생이어서", realizations: [] },
+    ],
+    lists: {
+      examples: [{ ko: "비가 와서", zh: "因为下雨", note: "" }],
+      senses: [{ sense: "顺序", usage: "用法说明" }],
+    },
+    similar: [{ headword: "-고", difference: "辨析文本" }],
+    antonyms: [],
+    common_errors: [{ wrong: "못 잤어서", right: "못 자서", note: "不能与过去时连用" }],
+    images: [],
   };
+  const set = {
+    name: "韩语语法",
+    levels: [
+      { code: "I", label: "TOPIK I", rank: 1 },
+      { code: "II", label: "TOPIK II", rank: 2 },
+    ],
+    template,
+  };
+  const entry = {
+    name: "아/어/여서",
+    summary: "因为……所以……",
+    category: "连接语尾",
+    level: { code: "I" },
+  };
+  const resolveRelated = (uid) => (uid === "kr-grammar:0c32ab5b7b4e" ? "-고" : null);
 
-  const md = exportGrammarMarkdown(entry, set, view);
-  assert.ok(md.includes("# -기 때문에"), "应包含标题");
-  assert.ok(md.includes("TOPIK II"), "应包含等级（set.levels label）");
-  assert.ok(md.includes("因为……，由于……"), "顶部摘要应为 entries.summary");
-  assert.ok(md.includes("## 语法信息"), "应包含 fields 节标题");
-  assert.ok(md.includes("## 意思"), "应包含 meanings 列表标题");
-  assert.ok(md.includes("## 使用方法"), "应包含 usages 列表标题");
-  assert.ok(md.includes("## 使用场景"), "应包含 scenes 列表标题");
-  assert.ok(md.includes("## 例句（双语）"), "应包含 examples 标题");
-  assert.ok(md.includes("비가 오기 때문에"), "应包含例句韩文");
-  assert.ok(md.includes("## 注意事项"), "应包含 cautions 标题");
-  assert.ok(md.includes("## 常见搭配"), "应包含 collocations 标题");
-  assert.ok(md.includes("近似语法"), "应包含 related 标题");
-  assert.ok(md.includes("-느라고"), "应包含已解析关联");
-  assert.ok(md.includes("另有 2 条未收录关联"), "应包含未收录折叠计数");
-  assert.ok(md.includes("-아/어서"), "应包含未收录原文");
+  const md = exportGrammarMarkdown(entry, set, view, resolveRelated);
+  assert.ok(md.includes("# 아/어/여서"), "应包含标题");
+  assert.ok(md.includes("TOPIK I"), "应包含等级（set.levels label）");
+  assert.ok(md.includes("## 完整讲解"), "应包含讲解节标题");
+  assert.ok(md.includes("完整讲解文本。"), "paragraph 应含全文");
+  assert.ok(md.includes("## 语法用法详解（活用 / 接续规则）"), "应包含用法详解标题");
+  assert.ok(md.includes("### 动词（1）"), "应按 attachesTo 分动词块");
+  assert.ok(md.includes("### 名词（1）"), "应按 attachesTo 分名词块");
+  assert.ok(md.includes("동사 어간 + 아/어/여서"), "应含接续公式");
+  assert.ok(md.includes("가다 → 가서"), "应含形态实现");
+  assert.ok(md.includes("## 例句"), "应包含例句节标题");
+  assert.ok(md.includes("비가 와서"), "应包含例句韩文");
+  assert.ok(md.includes("## 易错点"), "应包含易错点标题");
+  assert.ok(md.includes("~~못 잤어서~~"), "易错点误用应带删除线");
+  assert.ok(md.includes("## 近似语法"), "应包含近似语法标题");
+  assert.ok(md.includes("-고"), "应包含近似语法条目");
+  assert.ok(!md.includes("## 相反语法"), "无 antonyms 数据时「相反语法」模块应整节隐藏");
+  assert.ok(md.includes("## 义项"), "应包含义项标题");
+  assert.ok(md.includes("顺序"), "应包含义项内容");
+  assert.ok(md.includes("## 相关语法"), "应包含相关语法标题");
+  assert.ok(md.includes("정말（外部概念）"), "外部 ext: 应去前缀展示");
 
-  // 空子表隐藏：把 lists 清空后对应节不再出现
-  const emptyLists = Object.fromEntries(
-    Object.keys(view.lists).map((k) => [k, []]),
-  );
-  const emptyMd = exportGrammarMarkdown(entry, set, { ...view, lists: emptyLists });
-  assert.ok(!emptyMd.includes("## 意思"), "空 meanings 子表应整节隐藏");
-  assert.ok(!emptyMd.includes("## 使用场景"), "空 scenes 子表应整节隐藏");
-  assert.ok(!emptyMd.includes("## 常见搭配"), "空 collocations 子表应整节隐藏");
+  // 空子表整节隐藏
+  const emptyView = {
+    ...view,
+    paragraphs: {},
+    connections: [],
+    lists: { examples: [], senses: [] },
+    similar: [],
+    common_errors: [],
+    related: [],
+  };
+  const emptyMd = exportGrammarMarkdown(entry, set, emptyView, () => null);
+  assert.ok(!emptyMd.includes("## 完整讲解"), "空 paragraphs 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 语法用法详解"), "空 connections 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 例句"), "空 examples 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 易错点"), "空 common_errors 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 近似语法"), "空 similar 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 相关语法"), "空 related 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 义项"), "空 senses 应整节隐藏");
 });
