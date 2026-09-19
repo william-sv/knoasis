@@ -32,3 +32,6 @@ out/
 *.njsproj
 *.sln
 *.sw?
+
+# 内部设计 / 评审 / 方案文档：仅本地留存供参考，不随仓库发布
+docs/internal/
