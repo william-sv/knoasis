@@ -21,6 +21,8 @@ data/
 
 # 导入器产出的可分发学科包（.knowledgeset / .kpkg），由用户在 app 内导入安装，属派生数据。
 out/
+# 注：disciplines/ 下的学科包（*.kpkg）需随仓库分发——学科下载模块直接读取并供用户下载，
+# 故保留在 disciplines/ 并纳入版本库；out/ 仍为构建产物，不入库。
 
 # Editor directories and files
 .vscode/*
