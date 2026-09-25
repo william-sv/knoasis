@@ -24,7 +24,7 @@ const items = computed(() => {
       out.push({ kind: "ext", key: s, text: s.slice(4) });
       continue;
     }
-    if (s.startsWith("kr-grammar:")) {
+    if (s.startsWith("ko-grammar:")) {
       const target = ks.entryByUid.get(s);
       out.push({
         kind: target ? "uid" : "dangling",
@@ -99,7 +99,7 @@ function openRelated(it) {
 }
 .rc-chip:not(:disabled):hover {
   background: var(--panel-hover);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.4);
   transform: translateY(-1px);
 }
 .rc-chip:disabled {

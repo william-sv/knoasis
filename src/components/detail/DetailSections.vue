@@ -20,7 +20,10 @@ import DetailErrors from "./DetailErrors.vue";
 import DetailConnections from "./DetailConnections.vue";
 import DetailRelatedChips from "./DetailRelatedChips.vue";
 
-defineProps({
+// 注意：必须用 const props 接住 —— 下方 rowsFor() 读取 props.view；
+// 若只写裸 defineProps(...)，脚本作用域内没有 props 变量，examples/patterns/similar/antonyms
+// 这些需要 rowsFor() 的节会在渲染期抛 ReferenceError，导致整个模板详情子树渲染中断（正文空白）。
+const props = defineProps({
   template: { type: Object, default: null }, // set.template（kr_grammar / en_grammar 段）
   view: { type: Object, default: null }, // adapter.toDetailView(payload)（content 透传后的模板数据对象）
   entryUid: { type: String, default: "" }, // 当前详情条目 uid（DetailImageGrid 删图入参）
@@ -89,6 +92,51 @@ function headKeyFor(section, view) {
 function isRelatedArray(view) {
   return view && view.related && Array.isArray(view.related);
 }
+
+// 各模块固定配色（淡暖色系，直接写死：c = 主色 hex，rgb = 同色 RGB 通道串）。
+// rgb 供 rgba(var(--sec-accent-rgb), a) 兼容写法取浅底/描边，不依赖 color-mix。
+const SEC_THEME = {
+  explanation: { c: "#E6A85C", rgb: "230, 168, 92" }, // 语法释义 · 暖杏金
+  connections_grouped: { c: "#D98A4B", rgb: "217, 138, 75" }, // 活用/接续 · 琥珀
+  examples: { c: "#D96A4E", rgb: "217, 106, 78" }, // 例句 · 珊瑚
+  common_errors: { c: "#CC5B4E", rgb: "204, 91, 78" }, // 易错点 · 砖红
+  similar: { c: "#C9824E", rgb: "201, 130, 78" }, // 近似语法 · 焦糖
+  senses: { c: "#B9923C", rgb: "185, 146, 60" }, // 义项 · 橄榄金
+  related: { c: "#9C8C7E", rgb: "156, 140, 126" }, // 相关语法 · 暖灰褐
+};
+const SEC_THEME_FALLBACK = { c: "#C9824E", rgb: "201, 130, 78" };
+function secStyle(section) {
+  const t = (section && SEC_THEME[section.key]) || SEC_THEME_FALLBACK;
+  return { "--sec-accent": t.c, "--sec-accent-rgb": t.rgb };
+}
+// 该 section 是否真的有内容可展示：为空则整块（含边框）都不渲染，避免空色条。
+function sectionHasContent(section) {
+  const v = props.view || {};
+  const key = section && section.key;
+  const ptype = section && section.type;
+  if (ptype === "paragraph") {
+    const t = v.paragraphs ? v.paragraphs[paragraphKey(section)] : "";
+    return !!(t && String(t).trim());
+  }
+  if (ptype === "images") return Array.isArray(v.images) && v.images.length > 0;
+  if (ptype === "connections_grouped")
+    return Array.isArray(v.connections) && v.connections.length > 0;
+  if (ptype === "related")
+    return Array.isArray(v.related) && v.related.length > 0;
+  if (ptype === "list" && key === "related") {
+    if (isRelatedArray(v))
+      return Array.isArray(v.related) && v.related.length > 0;
+    const rel = v.related || {};
+    return !!(Array.isArray(rel.resolved) && rel.resolved.length) ||
+      !!(Array.isArray(rel.pending) && rel.pending.length);
+  }
+  if (ptype === "fields") {
+    const f = v.fields || {};
+    return Object.keys(f).some((k) => f[k] != null && String(f[k]).trim() !== "");
+  }
+  // list / examples / common_errors / connections / patterns / similar / antonyms
+  return rowsFor(section).length > 0;
+}
 </script>
 
 <template>
@@ -98,9 +146,15 @@ function isRelatedArray(view) {
         <!-- meta：头部元数据条由 GrammarDetail 挂载，这里跳过 -->
         <template v-if="section.type === 'meta'"></template>
 
+        <!-- 其它 section：统一包裹为带强调色的模块卡片（彩色边框 + 标题色；无内容整块隐藏） -->
+        <section
+          v-else-if="sectionHasContent(section)"
+          class="ds-block"
+          :style="secStyle(section)"
+        >
         <!-- fields：字段组 -->
         <DetailFieldTable
-          v-else-if="section.type === 'fields'"
+          v-if="section.type === 'fields'"
           :label="section.label"
           :fields="section.fields || []"
           :view-fields="view ? view.fields : {}"
@@ -173,7 +227,7 @@ function isRelatedArray(view) {
           :entry-uid="entryUid"
         />
 
-        <!-- 其它 list：空数组整节隐藏 -->
+        <!-- 其它 list：空数组整节隐藏（senses 等顶层 list 节读 view.lists[key]） -->
         <DetailListBlock
           v-else-if="
             section.type === 'list' &&
@@ -187,6 +241,7 @@ function isRelatedArray(view) {
           :item-fields="section.itemFields || []"
           :head-key="headKeyFor(section, view)"
         />
+        </section>
       </template>
     </template>
 
@@ -197,6 +252,56 @@ function isRelatedArray(view) {
 <style scoped>
 .detail-sections {
   margin-top: 2px;
+}
+/* 模块容器：无外边框、无底色（模块身份由「彩色标题 + 下划线」承担，内部卡片自带描边） */
+.ds-block {
+  margin: 18px 0 0;
+  padding: 0;
+}
+/* 模块标题：强调色标题 + 同色下划线（明确的模块身份） */
+.ds-block :deep(h2) {
+  color: var(--sec-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin: 0 0 11px;
+  padding: 0 0 7px;
+  border-bottom: 1px solid rgba(var(--sec-accent-rgb), 0.4);
+}
+/* 消除子组件自带的顶部外边距（卡片 padding 已提供间距） */
+.ds-block :deep(.psection),
+.ds-block :deep(.cxs),
+.ds-block :deep(.exsection),
+.ds-block :deep(.esection),
+.ds-block :deep(.tsection),
+.ds-block :deep(.lsection),
+.ds-block :deep(.relchips),
+.ds-block :deep(.rel-section) {
+  margin-top: 0;
+}
+/* 内部卡片：完整描边的浅底卡片（与模块色块形成分层，不再用左侧色条） */
+.ds-block :deep(.paragraph-body),
+.ds-block :deep(.ex-item),
+.ds-block :deep(.list-item),
+.ds-block :deep(.cx-card),
+.ds-block :deep(.err-item) {
+  border: 1px solid rgba(var(--sec-accent-rgb), 0.35);
+  background: var(--panel);
+}
+/* 例句/相关 等组件的交互色也跟随模块强调色 */
+.ds-block :deep(.ex-audio) {
+  color: var(--sec-accent);
+  border-color: rgba(var(--sec-accent-rgb), 0.4);
+}
+.ds-block :deep(.ex-audio:hover) {
+  background: rgba(var(--sec-accent-rgb), 0.12);
+  border-color: rgba(var(--sec-accent-rgb), 0.45);
+}
+.ds-block :deep(.rc-chip:not(:disabled):hover) {
+  border-color: rgba(var(--sec-accent-rgb), 0.4);
+}
+.ds-block :deep(.rc-chip:not(:disabled):hover .rc-arrow) {
+  color: var(--sec-accent);
 }
 .no-template {
   margin: 18px 0 0;

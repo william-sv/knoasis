@@ -389,7 +389,7 @@ onBeforeUnmount(() => {
 }
 .manual-input:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.5);
   background: var(--panel);
 }
 
@@ -397,7 +397,7 @@ onBeforeUnmount(() => {
   margin: 10px 16px 0;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, #e5484d 12%, var(--panel));
+  background: rgba(229, 72, 77, 0.12);
   color: var(--text);
   font-size: 11.5px;
   line-height: 1.6;
@@ -441,11 +441,11 @@ onBeforeUnmount(() => {
 
 /* 当前激活的学科包：高亮底色 + 左侧强调条 */
 .row.is-active {
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.1);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 .row.is-active:hover {
-  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.14);
 }
 .row.is-active.is-off {
   /* 理论上激活的包必为启用态（activate 会先启用），这里仅兜底避免样式冲突 */
@@ -515,13 +515,13 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
 }
 .badge--off {
-  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+  background: rgba(var(--text-muted-rgb), 0.18);
   color: var(--text-muted);
 }
 .badge--active {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  background: rgba(var(--accent-rgb), 0.16);
   color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border: 1px solid rgba(var(--accent-rgb), 0.45);
 }
 .row-meta {
   margin-top: 4px;

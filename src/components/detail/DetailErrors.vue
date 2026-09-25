@@ -64,7 +64,6 @@ function metaBadges(e) {
 .err-item {
   padding: 10px 12px;
   border: 1px solid var(--border-soft);
-  border-left: 3px solid color-mix(in srgb, #cc0000 55%, var(--border));
   border-radius: var(--radius);
   background: var(--panel-inset);
 }
@@ -79,7 +78,7 @@ function metaBadges(e) {
 .err-wrong {
   color: #cc0000;
   text-decoration: line-through;
-  text-decoration-color: color-mix(in srgb, #cc0000 60%, transparent);
+  text-decoration-color: rgba(204, 0, 0, 0.6);
 }
 .err-arrow {
   color: var(--text-faint);

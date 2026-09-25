@@ -79,11 +79,7 @@ const show = computed(() =>
     pos.value ||
       typeFine.value ||
       speechLevel.value ||
-      levelLabel.value ||
-      aliases.value.length ||
-      sources.value.length ||
-      category.value ||
-      entryId.value,
+      levelLabel.value,
   ),
 );
 </script>
@@ -96,18 +92,6 @@ const show = computed(() =>
       <span v-if="speechLevel" class="dm-chip dm-speech">{{ speechLevel }}</span>
       <span v-if="levelLabel" class="dm-chip dm-level">{{ levelLabel }}</span>
     </div>
-    <p v-if="aliases.length" class="dmeta-line">
-      <span class="dm-label">别名</span>{{ aliases.join(" · ") }}
-    </p>
-    <p v-if="sources.length" class="dmeta-line">
-      <span class="dm-label">出处</span>{{ sources.join(" · ") }}
-    </p>
-    <p v-if="category" class="dmeta-line">
-      <span class="dm-label">分类</span>{{ category }}
-    </p>
-    <p v-if="entryId" class="dmeta-line dmeta-id">
-      <span class="dm-label">ID</span>{{ entryId }}
-    </p>
   </div>
 </template>
 
@@ -136,8 +120,8 @@ const show = computed(() =>
 }
 .dm-pos {
   color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  border-color: rgba(var(--accent-rgb), 0.45);
+  background: rgba(var(--accent-rgb), 0.1);
   font-weight: 600;
 }
 .dm-type {
@@ -145,7 +129,7 @@ const show = computed(() =>
 }
 .dm-speech {
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.3);
 }
 .dm-level {
   color: var(--text);

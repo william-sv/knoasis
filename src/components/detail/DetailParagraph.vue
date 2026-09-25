@@ -53,7 +53,6 @@ const hasText = computed(() => (props.text || "").trim().length > 0);
 .paragraph-body {
   padding: 12px 14px;
   border: 1px solid var(--border-soft);
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, var(--border));
   border-radius: var(--radius);
   background: var(--panel-inset);
   font-size: 13px;
@@ -83,7 +82,7 @@ const hasText = computed(() => (props.text || "").trim().length > 0);
 }
 .paragraph-body.md code {
   font-family: var(--font-mono, monospace);
-  background: color-mix(in srgb, var(--text) 8%, transparent);
+  background: rgba(var(--text-rgb), 0.08);
   padding: 0 4px;
   border-radius: 4px;
 }

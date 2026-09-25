@@ -22,6 +22,19 @@
   --up: #2fbf71;                /* 选中绿色竖条 */
   --chip-bg: #eff1f5;
   --chip-text: #5d6673;
+
+  /* RGB 通道变量：供 rgba(var(--x-rgb), a) 兼容写法使用（不依赖 color-mix） */
+  --bg-rgb: 245, 246, 248;
+  --panel-rgb: 255, 255, 255;
+  --panel-inset-rgb: 250, 251, 252;
+  --panel-hover-rgb: 246, 248, 251;
+  --border-rgb: 227, 230, 235;
+  --border-soft-rgb: 238, 240, 244;
+  --text-rgb: 31, 39, 51;
+  --text-muted-rgb: 93, 102, 115;
+  --text-faint-rgb: 154, 163, 174;
+  --accent-rgb: 47, 158, 119;
+  --chip-bg-rgb: 239, 241, 245;
   --field-bg: #f2f4f7;
   --field-bg-hover: #eceef2;
   --code-bg: #f3f5f8;
@@ -61,6 +74,19 @@ html[data-theme="dark"] {
   --up: #37d47f;
   --chip-bg: #272c35;
   --chip-text: #a8b0ba;
+
+  /* RGB 通道变量（与上方色值一一对应） */
+  --bg-rgb: 20, 23, 28;
+  --panel-rgb: 27, 31, 38;
+  --panel-inset-rgb: 23, 26, 32;
+  --panel-hover-rgb: 32, 36, 45;
+  --border-rgb: 43, 48, 58;
+  --border-soft-rgb: 35, 39, 47;
+  --text-rgb: 231, 234, 238;
+  --text-muted-rgb: 154, 163, 173;
+  --text-faint-rgb: 98, 107, 118;
+  --accent-rgb: 55, 195, 140;
+  --chip-bg-rgb: 39, 44, 53;
   --field-bg: #232833;
   --field-bg-hover: #2a303c;
   --code-bg: #22272f;
@@ -129,7 +155,7 @@ button,
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  background: rgba(var(--accent-rgb), 0.24);
 }
 
 /* 细滚动条 */
@@ -138,13 +164,13 @@ button,
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--text-faint) 42%, transparent);
+  background: rgba(var(--text-faint-rgb), 0.42);
   border-radius: 999px;
   border: 3px solid transparent;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--text-faint) 70%, transparent);
+  background: rgba(var(--text-faint-rgb), 0.7);
   background-clip: content-box;
   border: 3px solid transparent;
   border-radius: 999px;
@@ -186,12 +212,12 @@ button {
   pointer-events: none;
 }
 .btn--primary {
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.34);
   color: var(--accent);
 }
 .btn--primary:hover {
-  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
 .icon-btn {
@@ -333,7 +359,7 @@ button {
   font-weight: 650;
   margin: 22px 0 8px;
   padding-left: 9px;
-  border-left: 3px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  border-left: 3px solid rgba(var(--accent-rgb), 0.7);
   line-height: 1.4;
 }
 .entry-content h2:first-child {
@@ -401,8 +427,8 @@ button {
   margin: 9px 0;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background: rgba(var(--accent-rgb), 0.07);
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
   font-size: 12.5px;
   color: var(--text-muted);
 }

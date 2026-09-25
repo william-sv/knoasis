@@ -168,9 +168,9 @@ async function onUserGuide() {
   gap: 8px;
   margin-bottom: 22px;
   padding: 20px 24px;
-  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--border));
+  border: 1px dashed rgba(var(--accent-rgb), 0.45);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.06);
 }
 .onboarding-title {
   font-size: 14px;
@@ -207,9 +207,9 @@ async function onUserGuide() {
   gap: 8px;
   margin-bottom: 22px;
   padding: 18px 24px;
-  border: 1px solid color-mix(in srgb, #e5484d 45%, var(--border));
+  border: 1px solid rgba(229, 72, 77, 0.45);
   border-radius: var(--radius);
-  background: color-mix(in srgb, #e5484d 8%, var(--panel));
+  background: rgba(229, 72, 77, 0.08);
 }
 .error-title {
   font-size: 14px;
@@ -251,7 +251,7 @@ async function onUserGuide() {
 }
 .home-card:hover {
   background: var(--panel-hover);
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.34);
   box-shadow: var(--shadow-1);
   transform: translateY(-1px);
 }

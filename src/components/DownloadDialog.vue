@@ -189,7 +189,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
   background: var(--panel-hover);
 }
 .subject-item.is-active {
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
   font-weight: 600;
 }
@@ -260,12 +260,12 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
   cursor: default;
 }
 .btn--dl {
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.34);
   color: var(--accent);
 }
 .btn--dl:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.2);
 }
 
 /* 图标按钮（关闭） */

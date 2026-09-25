@@ -101,7 +101,7 @@ function removeItem(uid, e) {
   padding: 0 6px;
   margin-left: 4px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.12);
   color: var(--accent);
   font-size: 11px;
   line-height: 18px;
@@ -133,8 +133,8 @@ function removeItem(uid, e) {
   background: var(--panel-hover);
 }
 .fav-item.is-current {
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: rgba(var(--accent-rgb), 0.06);
+  border-color: rgba(var(--accent-rgb), 0.22);
 }
 .fav-main {
   flex: 1;
@@ -198,7 +198,7 @@ function removeItem(uid, e) {
   opacity: 1;
 }
 .fav-remove:hover {
-  background: color-mix(in srgb, #e5484d 14%, transparent);
+  background: rgba(229, 72, 77, 0.14);
   color: #e5484d;
 }
 

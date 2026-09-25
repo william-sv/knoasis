@@ -93,7 +93,7 @@ function openRelated(r) {
 }
 .rel-chip:hover {
   background: var(--panel-hover);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.4);
   transform: translateY(-1px);
 }
 .rel-name {
@@ -160,7 +160,7 @@ function openRelated(r) {
 .rp-rel {
   font-size: 10.5px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: rgba(var(--accent-rgb), 0.1);
   border-radius: 4px;
   padding: 0 5px;
 }

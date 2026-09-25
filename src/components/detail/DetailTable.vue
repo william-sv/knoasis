@@ -93,7 +93,7 @@ const shownRows = computed(() =>
   border-bottom: none;
 }
 .data-table tbody tr:nth-child(even) {
-  background: color-mix(in srgb, var(--panel-inset) 45%, transparent);
+  background: rgba(var(--panel-inset-rgb), 0.45);
 }
 .col-mono {
   font-family: var(--font-mono, monospace);

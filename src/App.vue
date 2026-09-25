@@ -94,9 +94,16 @@ function onDividerDown(e) {
   if (e.button !== 0) return;
   e.preventDefault();
   dragging.value = true;
+  // 指针捕获：即使拖出窗口/其它应用，也能收到 pointerup，避免 is-dragging 卡死
+  try {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  } catch {
+    /* 不支持指针捕获时忽略 */
+  }
   window.addEventListener("pointermove", onDividerMove);
   window.addEventListener("pointerup", onDividerUp);
   window.addEventListener("pointercancel", onDividerUp);
+  window.addEventListener("blur", onDividerUp);
 }
 
 function onDividerMove(e) {
@@ -107,17 +114,20 @@ function onDividerMove(e) {
 }
 
 function onDividerUp() {
+  if (!dragging.value) return;
   dragging.value = false;
   ui.persistSplit();
   window.removeEventListener("pointermove", onDividerMove);
   window.removeEventListener("pointerup", onDividerUp);
   window.removeEventListener("pointercancel", onDividerUp);
+  window.removeEventListener("blur", onDividerUp);
 }
 
 onBeforeUnmount(() => {
   window.removeEventListener("pointermove", onDividerMove);
   window.removeEventListener("pointerup", onDividerUp);
   window.removeEventListener("pointercancel", onDividerUp);
+  window.removeEventListener("blur", onDividerUp);
 });
 </script>
 
@@ -126,7 +136,7 @@ onBeforeUnmount(() => {
     ref="appRef"
     class="app-shell"
     :class="{ 'is-dragging': dragging }"
-    :style="{ '--accent': ui.accentColor }"
+    :style="{ '--accent': ui.accentColor, '--accent-rgb': ui.accentRgb }"
   >
     <TopToolbar />
 
@@ -336,7 +346,7 @@ onBeforeUnmount(() => {
   z-index: 200;
   padding: 8px 16px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--text) 88%, transparent);
+  background: rgba(var(--text-rgb), 0.88);
   color: var(--bg);
   font-size: 12px;
   box-shadow: var(--shadow-2);

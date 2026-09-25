@@ -79,8 +79,8 @@ function clearAll() {
   font-size: 11px;
   line-height: 20px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: rgba(var(--accent-rgb), 0.14);
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
   white-space: nowrap;
 }
 
@@ -98,6 +98,6 @@ function clearAll() {
 .clear-filters:hover {
   background: var(--panel-hover);
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.4);
 }
 </style>

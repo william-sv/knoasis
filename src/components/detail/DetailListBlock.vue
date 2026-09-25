@@ -59,7 +59,6 @@ function display(v) {
 .list-item {
   padding: 10px 12px;
   border: 1px solid var(--border-soft);
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, var(--border));
   border-radius: var(--radius);
   background: var(--panel-inset);
 }

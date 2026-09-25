@@ -29,7 +29,7 @@ function loadRealTemplate() {
     path.join(repoRoot, "src-tauri/resources/grammar/template_registry.json"),
     "utf8",
   );
-  return JSON.parse(raw).kr_grammar;
+  return JSON.parse(raw).ko_grammar;
 }
 
 test("rankOf / levelLabelOf 映射 I/II/''", () => {
@@ -216,7 +216,7 @@ test("exportGrammarMarkdown 用 v11 模板 label 生成全部有值节、隐藏�
   const md = exportGrammarMarkdown(entry, set, view, resolveRelated);
   assert.ok(md.includes("# 아/어/여서"), "应包含标题");
   assert.ok(md.includes("TOPIK I"), "应包含等级（set.levels label）");
-  assert.ok(md.includes("## 完整讲解"), "应包含讲解节标题");
+  assert.ok(md.includes("## 语法释义"), "应包含讲解节标题");
   assert.ok(md.includes("完整讲解文本。"), "paragraph 应含全文");
   assert.ok(md.includes("## 语法用法详解（活用 / 接续规则）"), "应包含用法详解标题");
   assert.ok(md.includes("### 动词（1）"), "应按 attachesTo 分动词块");
@@ -246,7 +246,7 @@ test("exportGrammarMarkdown 用 v11 模板 label 生成全部有值节、隐藏�
     related: [],
   };
   const emptyMd = exportGrammarMarkdown(entry, set, emptyView, () => null);
-  assert.ok(!emptyMd.includes("## 完整讲解"), "空 paragraphs 应整节隐藏");
+  assert.ok(!emptyMd.includes("## 语法释义"), "空 paragraphs 应整节隐藏");
   assert.ok(!emptyMd.includes("## 语法用法详解"), "空 connections 应整节隐藏");
   assert.ok(!emptyMd.includes("## 例句"), "空 examples 应整节隐藏");
   assert.ok(!emptyMd.includes("## 易错点"), "空 common_errors 应整节隐藏");

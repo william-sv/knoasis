@@ -134,9 +134,9 @@ const showRemove = computed(() => !busy.value);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, #e5484d 45%, var(--border));
+  border: 1px solid rgba(229, 72, 77, 0.45);
   border-radius: 6px;
-  background: color-mix(in srgb, #ffffff 88%, transparent);
+  background: rgba(255, 255, 255, 0.88);
   color: #d93025;
   opacity: 0;
   transition: opacity 0.12s ease, background 0.12s ease;
@@ -157,7 +157,7 @@ const showRemove = computed(() => !busy.value);
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  background: color-mix(in srgb, #ffffff 92%, transparent);
+  background: rgba(255, 255, 255, 0.92);
   border-top: 1px solid var(--border-soft);
   backdrop-filter: blur(2px);
 }
@@ -181,11 +181,11 @@ const showRemove = computed(() => !busy.value);
   color: var(--text);
 }
 .confirm-btn--yes {
-  border-color: color-mix(in srgb, #e5484d 45%, var(--border));
+  border-color: rgba(229, 72, 77, 0.45);
   color: #d93025;
 }
 .confirm-btn--yes:hover:not(:disabled) {
-  background: color-mix(in srgb, #e5484d 8%, var(--panel));
+  background: rgba(229, 72, 77, 0.08);
 }
 .confirm-btn:disabled {
   opacity: 0.5;

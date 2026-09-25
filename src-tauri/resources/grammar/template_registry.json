@@ -1,6 +1,6 @@
 {
   "_说明": "每个学科一个详情模板。前端按 sections 顺序渲染；type=fields 渲染单值字段组，type=list 渲染多值列表，type=paragraph 渲染整段 pre-wrap 文本（view.paragraphs[key]），type=images 渲染图解网格（view.images，空则整节隐藏）。",
-  "kr_grammar": {
+  "ko_grammar": {
     "label": "韩语语法",
     "headwordLabel": "语法",
     "sections": [
@@ -12,7 +12,7 @@
       },
       {
         "key": "explanation",
-        "label": "完整讲解",
+        "label": "语法释义",
         "type": "paragraph",
         "fieldKey": "explanation"
       },

@@ -53,7 +53,21 @@ function realsOf(c) {
 }
 function irregLabel(code) {
   if (!code) return "";
+  // 源数据 irregularity 已为韩文受控标签（하不规则 等）；旧缩写码亦兼容
   return IRREG_LABELS[code] || code;
+}
+// 备注文案：irregularity（모음축약 / 하不规则…）+ note，两者都有则以「·」连接
+function remarkOf(r) {
+  const parts = [];
+  const irr = irregLabel(r && r.irregularity);
+  if (irr) parts.push(irr);
+  if (!isBlank(r && r.note)) parts.push(String(r.note).trim());
+  return parts.join(" · ");
+}
+
+// 该 connection 是否需要「备注」列（任一 realization 有 irregularity 或 note）
+function hasRemarkOf(c) {
+  return realsOf(c).some((r) => remarkOf(r) !== "");
 }
 
 // constraints → 可读文本行（稀疏，仅 2 条 connection 有）
@@ -91,16 +105,23 @@ function constraintLines(c) {
 
           <div v-if="realsOf(c).length" class="cx-real">
             <span class="cx-label">活用</span>
-            <div class="cx-real-list">
-              <span v-for="(r, j) in realsOf(c)" :key="j" class="cx-real-item">
-                <span class="cx-stem">{{ r.stem }}</span>
-                <span class="cx-arrow">→</span>
-                <span class="cx-ko">{{ r.ko }}</span>
-                <span v-if="irregLabel(r.irregularity)" class="cx-badge">
-                  {{ irregLabel(r.irregularity) }}
-                </span>
-                <span v-if="!isBlank(r.note)" class="cx-real-note">{{ r.note }}</span>
-              </span>
+            <div class="cx-real-wrap">
+              <table class="cx-real-table">
+                <thead>
+                  <tr>
+                    <th class="cx-th--stem">原型</th>
+                    <th class="cx-th--ko">活用</th>
+                    <th v-if="hasRemarkOf(c)" class="cx-th--note">备注</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(r, ri) in realsOf(c)" :key="ri">
+                    <td class="cx-td--stem">{{ isBlank(r.stem) ? "" : r.stem }}</td>
+                    <td class="cx-td--ko">{{ isBlank(r.ko) ? "" : r.ko }}</td>
+                    <td v-if="hasRemarkOf(c)" class="cx-td--note">{{ remarkOf(r) }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -170,7 +191,6 @@ function constraintLines(c) {
 .cx-card {
   padding: 10px 12px;
   border: 1px solid var(--border-soft);
-  border-left: 3px solid color-mix(in srgb, var(--accent) 55%, var(--border));
   border-radius: var(--radius);
   background: var(--panel-inset);
 }
@@ -214,7 +234,7 @@ function constraintLines(c) {
 .cx-chip {
   color: var(--accent);
   font-size: 11px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: rgba(var(--accent-rgb), 0.1);
   border-radius: 4px;
   padding: 0 6px;
 }
@@ -222,43 +242,55 @@ function constraintLines(c) {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  padding: 2px 0;
+  padding: 1px 0;
 }
-.cx-real-list {
+.cx-real-wrap {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px 10px;
+  flex-direction: column;
+  gap: 3px;
 }
-.cx-real-item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
+/* 活用表格：一行一个 realization，列 = 原型 / 活用 / （按需）备注 */
+.cx-real-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 12px;
-  word-break: break-word;
 }
-.cx-stem {
-  color: var(--text-faint);
-}
-.cx-arrow {
-  color: var(--text-faint);
-  font-size: 10px;
-}
-.cx-ko {
-  color: var(--text);
+.cx-real-table th {
+  font-size: 10.5px;
   font-weight: 600;
-}
-.cx-badge {
-  font-size: 10px;
-  line-height: 15px;
-  padding: 0 5px;
-  border-radius: 4px;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-}
-.cx-real-note {
   color: var(--text-faint);
+  text-align: left;
+  padding: 0 10px 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cx-real-table td {
+  padding: 3px 10px 3px 0;
+  border-bottom: 1px solid var(--border-soft);
+  word-break: break-word;
+  vertical-align: baseline;
+}
+.cx-real-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.cx-th--stem {
+  width: 34%;
+}
+.cx-th--ko {
+  width: 40%;
+}
+.cx-td--stem {
+  color: var(--text-faint);
+}
+.cx-td--ko {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+/* 备注列：不规则/注音等补充信息，用模块强调色弱化呈现（不喧宾夺主） */
+.cx-td--note {
+  color: var(--sec-accent, var(--accent));
   font-size: 11px;
 }
 .cx-constraint-line {

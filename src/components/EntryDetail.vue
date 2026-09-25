@@ -15,7 +15,7 @@ import { useSearch } from "../stores/search.js";
 import { copyText, stripHtml, typeLabel, formatTime } from "../lib/format.js";
 import { findSetById } from "../lib/data-registry.js";
 import { knowledge as ipcKnowledge } from "../lib/ipc.js";
-import { toDetailView } from "../lib/grammar/adapter.js";
+import { toDetailView, levelLabelOf } from "../lib/grammar/adapter.js";
 import { exportGrammarMarkdown } from "../lib/grammar/export.js";
 import GrammarDetail from "./detail/GrammarDetail.vue";
 import copyIcon from "../assets/icons/copy.png";
@@ -27,6 +27,17 @@ const notesStore = useNotes();
 const search = useSearch();
 
 const entry = computed(() => ui.selectedEntry);
+
+// 顶部 tags 模块：level → category → tags（同行动态换行）
+// level 优先 activeSet.levels 反查 label，回退 adapter.levelLabelOf
+const levelChipLabel = computed(() => {
+  const code = entry.value && entry.value.level ? entry.value.level.code || "" : "";
+  if (!code) return "";
+  const levels = (activeSet.value && Array.isArray(activeSet.value.levels)) ? activeSet.value.levels : [];
+  const hit = levels.find((l) => l.code === code);
+  if (hit && hit.label) return hit.label;
+  return levelLabelOf(code);
+});
 
 // ---------- 详情异步缓存（模板驱动详情） ----------
 const detailViews = reactive(new Map()); // uid -> toDetailView(payload)（content JSON 透传 + images 规范化）
@@ -195,6 +206,9 @@ const katexOptions = {
         <div class="detail-head">
           <div class="meta-row">
             <div class="meta-tags">
+              <span v-if="levelChipLabel" class="chip chip--faint chip--meta chip--level">{{ levelChipLabel }}</span>
+              <span v-if="currentView && currentView.type" class="chip chip--faint chip--meta">{{ currentView.type }}</span>
+              <span v-if="currentView && currentView.speechLevel" class="chip chip--faint chip--meta">{{ currentView.speechLevel }}</span>
               <span
                 v-for="t in (entry.tags || [])"
                 :key="t"
@@ -319,6 +333,9 @@ const katexOptions = {
   height: 100%;
   min-width: 0;
   background: var(--panel);
+  /* 详情整体允许文本选择（按钮/标签等交互控件仍单独禁选） */
+  user-select: text;
+  -webkit-user-select: text;
 }
 .detail-empty {
   background: var(--panel);
@@ -373,6 +390,33 @@ const katexOptions = {
   display: inline-flex;
   align-items: center;
 }
+/* 标签默认即带强调色，凸显其可交互身份（与 level/category 中性形成主次） */
+.chip--tag.chip--clickable {
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  background: rgba(var(--accent-rgb), 0.08);
+}
+/* 等级 chip：结构型元信息，中性底 + 强调色小圆点标记层级（区别于分类） */
+.chip--level {
+  position: relative;
+  padding-left: 16px;
+}
+.chip--level::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.7);
+}
+/* level / category 顶栏 chips：信息展示型，不可点击，描边区分 */
+.chip--meta {
+  border: 1px solid var(--border);
+  cursor: default;
+}
 /* 可点击标签（学科/类型/等级/分类）：交互态 + 明显选中态 */
 .chip--clickable {
   cursor: pointer;
@@ -381,19 +425,19 @@ const katexOptions = {
     box-shadow 0.12s ease;
 }
 .chip--clickable:hover {
-  background: color-mix(in srgb, var(--accent) 14%, var(--chip-bg));
+  background: rgba(var(--accent-rgb), 0.14);
   color: var(--text);
 }
 .chip--clickable:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline: 2px solid rgba(var(--accent-rgb), 0.55);
   outline-offset: 1px;
 }
 .chip--clickable.is-active {
-  background: color-mix(in srgb, var(--accent) 20%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.2);
   color: var(--accent);
   font-weight: 650;
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  box-shadow: 0 1px 3px rgba(var(--accent-rgb), 0.22);
 }
 .fav-btn {
   width: 30px;
@@ -419,8 +463,8 @@ const katexOptions = {
 }
 .fav-btn.is-fav {
   color: #f5b301;
-  border-color: color-mix(in srgb, #f5b301 45%, var(--border));
-  background: color-mix(in srgb, #f5b301 12%, var(--panel));
+  border-color: rgba(245, 179, 1, 0.45);
+  background: rgba(245, 179, 1, 0.12);
 }
 .fav-btn.is-fav .star {
   fill: #f5b301;
@@ -442,7 +486,7 @@ const katexOptions = {
 .copy-btn:hover {
   background: var(--panel-hover);
   color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.4);
 }
 .copy-icon {
   width: 15px;
@@ -488,12 +532,12 @@ const katexOptions = {
 
 .lead {
   margin: 0 0 10px;
-  padding: 9px 12px;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-muted);
-  background: var(--panel-inset);
-  border: 1px solid var(--border-soft);
+  padding: 10px 13px;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text);
+  background: rgba(230, 168, 92, 0.09);
+  border: 1px solid rgba(230, 168, 92, 0.26);
   border-radius: var(--radius);
 }
 
@@ -529,7 +573,7 @@ const katexOptions = {
 }
 .rel-chip:hover {
   background: var(--panel-hover);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-color: rgba(var(--accent-rgb), 0.4);
   transform: translateY(-1px);
 }
 .rel-chip .dot {
@@ -635,8 +679,8 @@ const katexOptions = {
   transition: border-color 0.12s ease, box-shadow 0.12s ease;
 }
 .note-area:focus {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.14);
 }
 .note-area::placeholder {
   color: var(--text-faint);

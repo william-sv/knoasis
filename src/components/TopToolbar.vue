@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
   background: var(--panel-hover);
 }
 .home-btn.is-active {
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.12);
 }
 .home-icon {
   width: 18px;
@@ -317,8 +317,8 @@ onBeforeUnmount(() => {
 }
 .search:focus-within {
   background: var(--panel);
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.14);
 }
 .search-icon {
   font-size: 12px;
@@ -347,14 +347,14 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   font-size: 11px;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+  background: rgba(var(--text-muted-rgb), 0.16);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: none;
 }
 .search-clear:hover {
-  background: color-mix(in srgb, var(--text-muted) 30%, transparent);
+  background: rgba(var(--text-muted-rgb), 0.3);
   color: var(--text);
 }
 .search-kbd {

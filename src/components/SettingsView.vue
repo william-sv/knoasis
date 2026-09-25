@@ -196,8 +196,8 @@ async function openRoot() {
   background: var(--panel-hover);
 }
 .theme-option.is-active {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  border-color: rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.08);
 }
 .theme-option-main {
   flex: 1;

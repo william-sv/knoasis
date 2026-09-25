@@ -155,7 +155,7 @@ function select(item) {
   background: var(--panel-hover);
 }
 .card.is-selected {
-  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  background: rgba(var(--accent-rgb), 0.09);
 }
 /* 选中：左侧竖条 */
 .card::before {

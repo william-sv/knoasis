@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Knoasis · v11 韩语语法 → kr-grammar.knowledgeset 学科包导入器
+"""Knoasis · v11 韩语语法 → ko-grammar.knowledgeset 学科包导入器
 
-读取 v11 交付文件（schema 1.3，kr_grammar_v11.json），产出符合 Knoasis knowledge
-v1 契约的学科包：kr-grammar.knowledgeset/{meta.json, template.json, knowledge.db}，
+读取 v11 交付文件（schema 1.3，ko_grammar_v11.json），产出符合 Knoasis knowledge
+v1 契约的学科包：ko-grammar.knowledgeset/{meta.json, template.json, knowledge.db}，
 供用户在 app 内「导入知识包」安装到用户根（$APPDATA/com.william.knoasis/knowledge）。
 
 > 本发行版**不内置**学科包（commands.rs: builtin_root 注释「当前发行版不内置任何学科包」），
 > 故默认输出到仓库 `out/`（可分发产物目录），而非 src-tauri/resources/knowledge。
 
 关键映射（对齐 v11 规范 与 前端模板 sections）：
-  - uid            = "kr-grammar:" + sha1(headword)[:12]（与 Rust uid::derive 一致）
+  - uid            = "ko-grammar:" + sha1(headword)[:12]（与 Rust uid::derive 一致）
   - entries 列     : uid/headword/category/level(→ code I/II)/tags/summary
   - entry_detail.content（view-ready，toDetailView 透传）：
       id, type, pos, speechLevel, aliases, sources, related   ← 条目级字段并入（Rust get_entry 不返回）
@@ -22,12 +22,12 @@ v1 契约的学科包：kr-grammar.knowledgeset/{meta.json, template.json, knowl
       images: []
   - related 字符串数组：内部 "ko[a-z0-9]{12}" → 映射为对应条目 app uid（可点击跳转）；
     外部 "ext:概念" 原样保留；悬空内部引用保留原串并记 warning。
-  - 模板：从 template_registry.json 的 kr_grammar 段原样迁出为包内 template.json
+  - 模板：从 template_registry.json 的 ko_grammar 段原样迁出为包内 template.json
     （registry 为权威回退；包内优先，二者保持一致）。
 
 用法：
   python3 scripts/legacy/import-v11-to-knowledgeset.py \
-      --src /Users/william/Downloads/yufa/kr_grammar_v11.json
+      --src /Users/william/Downloads/yufa/ko_grammar_v11.json
   python3 scripts/legacy/import-v11-to-knowledgeset.py --src <v11.json> --out /tmp/k
   python3 scripts/legacy/import-v11-to-knowledgeset.py --src <v11.json> --force
 """
@@ -42,7 +42,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-SET_ID = "kr-grammar"
+SET_ID = "ko-grammar"
 PACKAGE_NAME = f"{SET_ID}.knowledgeset"
 SCHEMA_VERSION = 1
 COLOR = "#D97706"
@@ -63,8 +63,11 @@ TYPES = [{"value": "grammar", "label": "语法"}]
 # v11 level 全称 → 短 code（与 meta.levels.code 对齐；Rust level_label 由 code 反查）
 LEVEL_TO_CODE = {"TOPIK I": "I", "TOPIK II": "II", "": ""}
 
+# 旧版 irregularity 缩写码（源数据转换脚本须已改写为韩文标签；包内不得残留）
+IRR_CODE_KR = {"ha-irr", "contraction", "r-irr", "d-irr", "s-irr", "eu-drop", "b-irr", "h-irr"}
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent  # scripts/legacy/ → repo root
-DEFAULT_SRC = REPO_ROOT / "data" / "grammar" / "kr_grammar_v11.json"
+DEFAULT_SRC = REPO_ROOT / "data" / "grammar" / "ko_grammar_v11.json"
 # 可分发产物目录：产出的 .knowledgeset 由用户在 app 内「导入知识包」安装到用户根（APPDATA）。
 # 注意：本发行版**不内置**任何学科包（见 src-tauri/src/knowledge/commands.rs builtin_root 注释），
 # 故不写入 src-tauri/resources/knowledge（该目录随包时不存在）。
@@ -97,7 +100,7 @@ CREATE TABLE entry_detail (
 
 # content 顶层允许键（自检用；前端按模板 sections 消费）
 ALLOWED_CONTENT_KEYS = {
-    "id", "type", "pos", "speechLevel", "aliases", "sources", "related",
+    "id", "type", "speechLevel", "aliases", "sources", "related",
     "paragraphs", "connections", "lists", "similar", "common_errors", "images",
 }
 
@@ -151,7 +154,6 @@ def build_content(item: dict, id_to_uid: dict) -> dict:
         # 条目级字段并入（Rust get_entry 不返回这些）
         "id": s_or_empty(item.get("id")),
         "type": s_or_empty(item.get("type")),
-        "pos": s_or_empty(item.get("pos")),
         "speechLevel": s_or_empty(item.get("speechLevel")),
         "aliases": item.get("aliases") or [],
         "sources": item.get("sources") or [],
@@ -169,7 +171,8 @@ def build_content(item: dict, id_to_uid: dict) -> dict:
     }
 
 
-def build_meta_json(entry_count: int) -> dict:
+def build_meta_json(entry_count: int, source_meta: dict | None = None) -> dict:
+    sm = source_meta or {}
     return {
         "schema_version": SCHEMA_VERSION,
         "id": SET_ID,
@@ -178,14 +181,19 @@ def build_meta_json(entry_count: int) -> dict:
         "language": LANGUAGE,
         "kind": KIND,
         "description": DESCRIPTION,
-        "author": {"name": "William / Knoasis"},
-        "homepage": "",
-        "license": "proprietary",
         "color": COLOR,
         "levels": LEVELS,
         "types": TYPES,
         "entry_count": entry_count,
-        "update_url": None,
+        "update_url": sm.get("update_url") or None,
+        # ---- 来自源 _meta（v11 规范 14 字段），仅作包内溯源/描述；Rust 解析容忍额外字段 ----
+        "template_type": sm.get("template_type", "ko_grammar"),
+        "template_version": sm.get("template_version", "1.0"),
+        "discipline": sm.get("discipline", ["인문학", "한국어", "문법"]),
+        "compiler": sm.get("compiler", ""),
+        "original_author": sm.get("original_author", ""),
+        "data_source": sm.get("data_source", ""),
+        "generated_at": sm.get("generated_at", ""),
     }
 
 
@@ -193,16 +201,19 @@ def load_template_json() -> dict:
     if not REGISTRY.is_file():
         raise SystemExit(f"缺少 template_registry.json: {REGISTRY}")
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
-    seg = registry.get("kr_grammar")
+    seg = registry.get("ko_grammar")
     if not isinstance(seg, dict):
         raise SystemExit("template_registry.json 缺少 kr_grammar 段")
     return seg
 
 
 def make_knowledge_db(target_dir: Path, items: list, id_to_uid: dict) -> dict:
-    # 预构建 headword→uid（含冲突确定性后缀）
+    # 预构建 headword→uid（含冲突确定性后缀）。
+    # 注意：冲突解析必须按 items 顺序记录 (final_headword, uid)，绝不能按原始
+    # headword 作 key——重复 headword 会让后写入者覆盖前者的映射，导致两条都解析
+    # 到同一个 suffixed headword 而触发 UNIQUE 约束冲突。
+    entries_meta = []  # 与 items 顺序对齐的 (final_headword, uid)
     used_uids, used_hw = set(), set()
-    hw_to_uid, final_hw_map = {}, {}
     conflicts = 0
     for it in items:
         hw = it["headword"]
@@ -214,36 +225,33 @@ def make_knowledge_db(target_dir: Path, items: list, id_to_uid: dict) -> dict:
             fhw = f"{hw}-{n}"
             conflicts += 1
         uid = derive_uid(fhw)
-        n = 2
         while uid in used_uids:
+            n += 1
             fhw = f"{hw}-{n}"
             uid = derive_uid(fhw)
             conflicts += 1
-            n += 1
         used_hw.add(fhw)
         used_uids.add(uid)
-        hw_to_uid[hw] = uid
-        final_hw_map[hw] = fhw
+        entries_meta.append((fhw, uid))
 
     db_path = target_dir / "knowledge.db"
     dst = sqlite3.connect(str(db_path))
     dst.executescript(DDL)
 
     entry_count = 0
-    for it in items:
-        hw = it["headword"]
-        fhw = final_hw_map[hw]
-        uid = hw_to_uid[hw]
+    for idx, it in enumerate(items):
+        fhw, uid = entries_meta[idx]
         category = s_or_empty(it.get("category"))
         level = LEVEL_TO_CODE.get(s_or_empty(it.get("level")), s_or_empty(it.get("level")))
         tags = ",".join(it.get("tags") or [])
         summary = s_or_empty(it.get("summary"))
+        sort = s_or_empty(it.get("sort"))
         content = build_content(it, id_to_uid)
 
         dst.execute(
-            "INSERT INTO entries(id, uid, headword, category, level, tags, summary) "
-            "VALUES (?,?,?,?,?,?,?)",
-            (entry_count + 1, uid, fhw, category, level, tags, summary),
+            "INSERT INTO entries(id, uid, headword, category, level, tags, summary, sort) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (entry_count + 1, uid, fhw, category, level, tags, summary, sort),
         )
         dst.execute(
             "INSERT INTO entry_detail(entry_id, content) VALUES (?,?)",
@@ -334,6 +342,18 @@ def run_selfcheck(pkg_dir: Path, source_items=None) -> dict:
             c_sense += len((c.get("lists") or {}).get("senses") or [])
             c_sim += len(c.get("similar") or [])
             c_err += len(c.get("common_errors") or [])
+            # irregularity 自洽校验（§13）：标了 irregularity 必须偏离 stem 直拼；且须为韩文标签
+            for conn_item in (c.get("connections") or []):
+                for rz in conn_item.get("realizations") or []:
+                    irr = rz.get("irregularity")
+                    if irr is not None:
+                        if irr in IRR_CODE_KR:
+                            errors.append(f"irregularity 仍为缩写码（须韩文标签）: {irr}")
+                        if rz.get("ko") == rz.get("stem"):
+                            errors.append(
+                                f"irregularity 标注但 ko==stem 未偏离直拼: "
+                                f"headword={headword} stem={rz.get('stem')}"
+                            )
         # level code 受控
         if meta:
             for (lv,) in conn.execute(
@@ -423,7 +443,7 @@ def main() -> int:
     stats = make_knowledge_db(pkg_dir, items, id_to_uid)
 
     (pkg_dir / "meta.json").write_text(
-        json.dumps(build_meta_json(stats["entry_count"]), ensure_ascii=False, indent=2) + "\n",
+        json.dumps(build_meta_json(stats["entry_count"], data.get("_meta")), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     (pkg_dir / "template.json").write_text(

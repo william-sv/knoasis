@@ -91,6 +91,10 @@ export const useUi = defineStore("ui", () => {
     activeSet.value ? activeSet.value.color : DEFAULT_ACCENT,
   );
 
+  // 强调色的 RGB 通道串（"r, g, b"）：供 rgba(var(--accent-rgb), a) 兼容写法使用，
+  // 与 --accent 一同内联覆盖（学科切换时两者必须同步）。
+  const accentRgb = computed(() => hexToRgbTriplet(accentColor.value));
+
   const selectedEntry = computed(() => {
     if (!selectedUid.value) return null;
     return knowledgeSets.entryByUid.get(selectedUid.value) ?? null;
@@ -313,6 +317,7 @@ export const useUi = defineStore("ui", () => {
     downloadOpen,
     activeSet,
     accentColor,
+    accentRgb,
     selectedEntry,
     firstVisible,
     switchSet,
