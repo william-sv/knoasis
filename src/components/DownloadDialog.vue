@@ -4,14 +4,14 @@
 // - 右侧：当前学科的版本包列表（版本号 / 条目数 / 包大小 / 更新日期 + [下载]）
 // - 打开时优先从多个镜像源读取学科包目录（raw → jsDelivr → ghproxy → gitmirror，依次回退）；
 //   拉取成功则刷新本地缓存（4 小时内有效）；全部镜像失败则回退到本地缓存。
-// - 点击下载时从 pkg.path 经同样的多镜像源拉取 .kpkg，落盘临时文件后调用 knowledge.importSet 导入并 reload。
+// - 点击下载时从 pkg.path 经同样的多镜像源拉取 .kpkg，落盘到 app 学科包目录（appDataDir/disciplines/）后调用 knowledge.importSet 导入并 reload。
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useUi } from "../stores/ui.js";
 import { isTauri, knowledge } from "../lib/ipc.js";
 import { useKnowledgeSets } from "../stores/knowledgeSets.js";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { writeFile, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { tempDir, join, appDataDir } from "@tauri-apps/api/path";
+import { writeFile, readTextFile, writeTextFile, mkdir } from "@tauri-apps/plugin-fs";
+import { join, appDataDir } from "@tauri-apps/api/path";
 
 const ui = useUi();
 const knowledgeSets = useKnowledgeSets();
@@ -171,7 +171,14 @@ async function doDownload(subject, pkg) {
       }
     }
     if (!buf) throw lastErr || new Error("所有镜像源均不可用");
-    const dir = await tempDir();
+    // 落盘到 app 自身的学科包目录（非临时目录），下载后可直接载入对应学科包
+    const baseDir = await appDataDir();
+    const dir = await join(baseDir, "disciplines");
+    try {
+      await mkdir(dir, { recursive: true });
+    } catch {
+      /* 目录已存在时 mkdir 可能抛错，忽略即可 */
+    }
     const path = await join(dir, `${pkg.id}.kpkg`);
     await writeFile(path, new Uint8Array(buf));
     await knowledge.importSet({ src_dir: path });

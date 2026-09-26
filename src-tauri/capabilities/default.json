@@ -17,7 +17,6 @@
       ]
     },
     "fs:allow-appdata-read",
-    "fs:allow-appdata-write",
-    "fs:allow-temp-write"
+    "fs:allow-appdata-write"
   ]
 }
