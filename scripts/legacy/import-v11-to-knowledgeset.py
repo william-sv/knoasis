@@ -180,7 +180,8 @@ def build_meta_json(entry_count: int, source_meta: dict | None = None) -> dict:
         "version": "11.0.0",
         "language": LANGUAGE,
         "kind": KIND,
-        "description": DESCRIPTION,
+        # 优先用源 _meta.description（与 update_url/discipline 等字段同源），缺失回退常量
+        "description": (source_meta or {}).get("description") or DESCRIPTION,
         "color": COLOR,
         "levels": LEVELS,
         "types": TYPES,
