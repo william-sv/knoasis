@@ -95,7 +95,7 @@ async function refreshManaged() {
   try {
     const res = await knowledge.manageList();
     const map = {};
-    for (const s of res?.sets || []) map[s.set_id] = s.version;
+    for (const s of res?.sets || []) map[s.id] = s.version;
     managedVersions.value = map;
   } catch {
     /* 状态查询失败不影响下载功能本身 */
