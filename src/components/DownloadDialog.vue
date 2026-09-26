@@ -2,9 +2,9 @@
 // 学科包下载（弹窗）
 // - 左侧窄列：学科列表（点击切换 + 选中高亮）
 // - 右侧：当前学科的版本包列表（版本号 / 条目数 / 包大小 / 更新日期 + [下载]）
-// - 打开时优先从 CATALOG_URL（GitHub raw）读取学科包目录；
-//   拉取成功则刷新本地缓存（4 小时内有效）；网络失败则回退到本地缓存。
-// - 点击下载时从 pkg.url 拉取 .kpkg 落盘临时文件后调用 knowledge.importSet 导入，并 reload 刷新。
+// - 打开时优先从多个镜像源读取学科包目录（raw → jsDelivr → ghproxy → gitmirror，依次回退）；
+//   拉取成功则刷新本地缓存（4 小时内有效）；全部镜像失败则回退到本地缓存。
+// - 点击下载时从 pkg.path 经同样的多镜像源拉取 .kpkg，落盘临时文件后调用 knowledge.importSet 导入并 reload。
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useUi } from "../stores/ui.js";
 import { isTauri, knowledge } from "../lib/ipc.js";
@@ -16,9 +16,36 @@ import { tempDir, join, appDataDir } from "@tauri-apps/api/path";
 const ui = useUi();
 const knowledgeSets = useKnowledgeSets();
 
-// 学科包目录：打开时从 GitHub raw 拉取（与 disciplines/ 仓库内文件同源）。
-const CATALOG_URL =
-  "https://raw.githubusercontent.com/william-sv/knoasis/main/disciplines/catalog.json";
+// 学科包目录与包文件：经多个镜像源依次尝试拉取。
+// 国内 raw.githubusercontent.com 常被墙，故同时提供 jsDelivr / ghproxy / gitmirror 回退。
+// catalog.json 与 .kpkg 均位于仓库根目录，用仓库相对路径拼接各镜像基址。
+const REPO = "william-sv/knoasis";
+const BRANCH = "main";
+const MIRROR_TEMPLATES = [
+  (p) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${p}`,
+  (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${p}`,
+  (p) => `https://ghproxy.com/https://raw.githubusercontent.com/${REPO}/${BRANCH}/${p}`,
+  (p) => `https://raw.gitmirror.com/${REPO}/${BRANCH}/${p}`,
+];
+function candidatesFor(relPath) {
+  return MIRROR_TEMPLATES.map((t) => t(relPath));
+}
+const CATALOG_CANDIDATES = candidatesFor("disciplines/catalog.json");
+
+// 依次尝试候选地址，返回首个成功的 JSON；全部失败则抛出最后一个错误。
+async function fetchFirstJson(candidates) {
+  let lastErr;
+  for (const url of candidates) {
+    try {
+      const resp = await tauriFetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      return await resp.json();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("所有镜像源均不可用");
+}
 
 // 本地缓存：目录拉取失败时回退使用，下载后记录时间戳，4 小时内有效。
 const CACHE_FILE = "catalog.cache.json";
@@ -74,9 +101,7 @@ async function loadCatalog() {
   catalogError.value = "";
   usingCache.value = false;
   try {
-    const resp = await tauriFetch(CATALOG_URL);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
+    const data = await fetchFirstJson(CATALOG_CANDIDATES);
     subjects.value = data.subjects || [];
     activeId.value = subjects.value[0]?.id ?? null;
     // 成功则刷新本地缓存，供下次离线回退（4h 内有效）
@@ -94,7 +119,7 @@ async function loadCatalog() {
       usingCache.value = true;
     } else {
       subjects.value = [];
-      catalogError.value = "学科目录加载失败，请检查网络后重试";
+      catalogError.value = "学科目录加载失败（已尝试多个镜像源），请检查网络后重试";
     }
   } finally {
     loadingCatalog.value = false;
@@ -105,9 +130,20 @@ async function doDownload(subject, pkg) {
   if (downloading.value) return;
   downloading.value = `${subject.id}:${pkg.version}`;
   try {
-    const resp = await tauriFetch(pkg.url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const buf = await resp.arrayBuffer();
+    const candidates = candidatesFor(pkg.path);
+    let buf = null;
+    let lastErr;
+    for (const url of candidates) {
+      try {
+        const resp = await tauriFetch(url);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        buf = await resp.arrayBuffer();
+        break;
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    if (!buf) throw lastErr || new Error("所有镜像源均不可用");
     const dir = await tempDir();
     const path = await join(dir, `${pkg.id}.kpkg`);
     await writeFile(path, new Uint8Array(buf));
