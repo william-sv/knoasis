@@ -2,18 +2,36 @@
 // 学科包下载（弹窗）
 // - 左侧窄列：学科列表（点击切换 + 选中高亮）
 // - 右侧：当前学科的版本包列表（版本号 / 条目数 / 包大小 / 更新日期 + [下载]）
-// - 真实下载源接入前：SUBJECTS 为空，弹窗展示「下载源尚未接入」空态，不展示任何假数据。
+// - 打开时优先从 CATALOG_URL（GitHub raw）读取学科包目录；
+//   拉取成功则刷新本地缓存（4 小时内有效）；网络失败则回退到本地缓存。
+// - 点击下载时从 pkg.url 拉取 .kpkg 落盘临时文件后调用 knowledge.importSet 导入，并 reload 刷新。
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useUi } from "../stores/ui.js";
+import { isTauri, knowledge } from "../lib/ipc.js";
+import { useKnowledgeSets } from "../stores/knowledgeSets.js";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { writeFile, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { tempDir, join, appDataDir } from "@tauri-apps/api/path";
 
 const ui = useUi();
+const knowledgeSets = useKnowledgeSets();
 
-// 学科包目录：真实数据由后端/下载接口填充；当前无可用目录（不内置任何示例/假数据）。
-const SUBJECTS = [];
+// 学科包目录：打开时从 GitHub raw 拉取（与 disciplines/ 仓库内文件同源）。
+const CATALOG_URL =
+  "https://raw.githubusercontent.com/william-sv/knoasis/main/disciplines/catalog.json";
 
-const activeId = ref(SUBJECTS[0]?.id ?? null);
+// 本地缓存：目录拉取失败时回退使用，下载后记录时间戳，4 小时内有效。
+const CACHE_FILE = "catalog.cache.json";
+const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 小时
+
+const subjects = ref([]);
+const loadingCatalog = ref(false);
+const catalogError = ref("");
+const usingCache = ref(false);
+
+const activeId = ref(null);
 const activeSubject = computed(
-  () => SUBJECTS.find((s) => s.id === activeId.value) || SUBJECTS[0] || null,
+  () => subjects.value.find((s) => s.id === activeId.value) || subjects.value[0] || null,
 );
 
 /** 正在下载的包 key（`${subjectId}:${version}`），同时只允许一个进行中 */
@@ -23,22 +41,95 @@ function isDownloading(subject, pkg) {
   return downloading.value === `${subject.id}:${pkg.version}`;
 }
 
-function doDownload(subject, pkg) {
+async function cachePath() {
+  const dir = await appDataDir();
+  return await join(dir, CACHE_FILE);
+}
+
+async function saveCatalogCache(data) {
+  const p = await cachePath();
+  await writeTextFile(p, JSON.stringify({ ...data, _cachedAt: Date.now() }));
+}
+
+async function readCatalogCache() {
+  try {
+    const p = await cachePath();
+    const text = await readTextFile(p);
+    const data = JSON.parse(text);
+    if (typeof data._cachedAt === "number" && Date.now() - data._cachedAt <= CACHE_TTL_MS) {
+      return data;
+    }
+    return null; // 已过期
+  } catch {
+    return null; // 不存在 / 解析失败
+  }
+}
+
+async function loadCatalog() {
+  if (!isTauri()) {
+    catalogError.value = "下载模块仅在桌面应用中可用";
+    return;
+  }
+  loadingCatalog.value = true;
+  catalogError.value = "";
+  usingCache.value = false;
+  try {
+    const resp = await tauriFetch(CATALOG_URL);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    subjects.value = data.subjects || [];
+    activeId.value = subjects.value[0]?.id ?? null;
+    // 成功则刷新本地缓存，供下次离线回退（4h 内有效）
+    try {
+      await saveCatalogCache(data);
+    } catch {
+      /* 缓存写入失败不阻塞在线读取 */
+    }
+  } catch (e) {
+    // 网络失败：回退本地缓存（4h 内有效）
+    const cached = await readCatalogCache();
+    if (cached) {
+      subjects.value = cached.subjects || [];
+      activeId.value = subjects.value[0]?.id ?? null;
+      usingCache.value = true;
+    } else {
+      subjects.value = [];
+      catalogError.value = "学科目录加载失败，请检查网络后重试";
+    }
+  } finally {
+    loadingCatalog.value = false;
+  }
+}
+
+async function doDownload(subject, pkg) {
   if (downloading.value) return;
   downloading.value = `${subject.id}:${pkg.version}`;
-  // 接入真实下载源前的占位交互：0.8s 后提示尚未接入
-  setTimeout(() => {
+  try {
+    const resp = await tauriFetch(pkg.url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const buf = await resp.arrayBuffer();
+    const dir = await tempDir();
+    const path = await join(dir, `${pkg.id}.kpkg`);
+    await writeFile(path, new Uint8Array(buf));
+    await knowledge.importSet({ src_dir: path });
+    await knowledgeSets.reload();
+    ui.showToast(`已下载并导入 ${subject.name} ${pkg.version}`);
+  } catch (e) {
+    const msg = e && e.message ? e.message : String(e);
+    ui.showToast(`下载失败：${msg}`);
+  } finally {
     downloading.value = "";
-    ui.showToast("下载源尚未接入，敬请期待");
-  }, 800);
+  }
 }
 
 function onKeydown(e) {
   if (e.key === "Escape") ui.closeDownload();
 }
 
-// 挂载/卸载时绑定 Esc 关闭
-onMounted(() => window.addEventListener("keydown", onKeydown));
+onMounted(() => {
+  window.addEventListener("keydown", onKeydown);
+  loadCatalog();
+});
 onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 </script>
 
@@ -48,17 +139,25 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       <header class="modal-head">
         <div class="modal-head-main">
           <div class="modal-title">学科包下载</div>
-          <div class="modal-sub">浏览可用的学科知识包</div>
+          <div class="modal-sub">
+            浏览可用的学科知识包<span v-if="usingCache"> · 离线缓存</span>
+          </div>
         </div>
         <!-- 关闭按钮固定右上角 -->
         <button class="icon-btn modal-close" title="关闭" @click="ui.closeDownload()">✕</button>
       </header>
 
-      <div v-if="activeSubject" class="modal-body">
+      <div v-if="loadingCatalog" class="modal-body modal-body--empty">
+        正在加载学科目录…
+      </div>
+      <div v-else-if="catalogError" class="modal-body modal-body--empty">
+        {{ catalogError }}
+      </div>
+      <div v-else-if="activeSubject" class="modal-body">
         <!-- 左侧学科列表 -->
         <aside class="subjects">
           <button
-            v-for="s in SUBJECTS"
+            v-for="s in subjects"
             :key="s.id"
             class="subject-item"
             :class="{ 'is-active': s.id === activeId }"
@@ -96,7 +195,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
       </div>
 
       <div v-else class="modal-body modal-body--empty">
-        下载源尚未接入，学科包目录即将上线。
+        暂无可用学科包。
       </div>
     </div>
   </div>
@@ -292,7 +391,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
   color: var(--text-faint);
 }
 
-/* 无可用目录（下载源尚未接入）空态 */
+/* 无可用目录 / 加载中 / 错误 空态 */
 .modal-body--empty {
   align-items: center;
   justify-content: center;

@@ -13,6 +13,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         // 学科包管理：导入学科包时用原生目录选择器
         .plugin(tauri_plugin_dialog::init())
+        // 学科下载：从远程 URL 拉取 .kpkg 并落盘
+        .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             // userdata.db 可写单连接：启动即建目录 + 建表 + 迁移（v2→v3），供 user_* 命令使用
             let conn = userdata::open_userdata(app.handle())?;

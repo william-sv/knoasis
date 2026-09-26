@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "updatedAt": "2026-09-26",
+  "subjects": [
+    {
+      "id": "korean",
+      "name": "韩语",
+      "color": "#2f9e77",
+      "packages": [
+        {
+          "id": "ko-grammar",
+          "name": "基础韩语语法",
+          "version": "11.0.0",
+          "entries": 522,
+          "size": 576514,
+          "updatedAt": "2026-09-20",
+          "url": "https://raw.githubusercontent.com/william-sv/knoasis/main/disciplines/korean/ko-grammar.kpkg"
+        }
+      ]
+    }
+  ]
+}
