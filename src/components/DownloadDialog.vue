@@ -101,10 +101,8 @@ async function readCatalogCache() {
     const p = await cachePath();
     const text = await readTextFile(p);
     const data = JSON.parse(text);
-    if (typeof data._cachedAt === "number" && Date.now() - data._cachedAt <= CACHE_TTL_MS) {
-      return data;
-    }
-    return null; // 已过期
+    if (data && typeof data._cachedAt === "number") return data;
+    return null; // 结构异常
   } catch {
     return null; // 不存在 / 解析失败
   }
@@ -118,19 +116,30 @@ async function loadCatalog() {
   loadingCatalog.value = true;
   catalogError.value = "";
   usingCache.value = false;
+
+  // 1) 先看本地缓存：4 小时内新鲜则直接使用，不向云端发请求
+  const cached = await readCatalogCache();
+  const fresh = cached && Date.now() - cached._cachedAt <= CACHE_TTL_MS;
+  if (cached && fresh) {
+    subjects.value = cached.subjects || [];
+    activeId.value = subjects.value[0]?.id ?? null;
+    usingCache.value = true;
+    loadingCatalog.value = false;
+    return;
+  }
+
+  // 2) 缓存缺失或已过期：向云端（多镜像）拉取最新目录并刷新时间戳
   try {
     const data = await fetchFirstJson(CATALOG_CANDIDATES);
     subjects.value = data.subjects || [];
     activeId.value = subjects.value[0]?.id ?? null;
-    // 成功则刷新本地缓存，供下次离线回退（4h 内有效）
     try {
       await saveCatalogCache(data);
     } catch {
       /* 缓存写入失败不阻塞在线读取 */
     }
   } catch (e) {
-    // 网络失败：回退本地缓存（4h 内有效）
-    const cached = await readCatalogCache();
+    // 云端也失败：若有过期缓存则降级使用，否则报错
     if (cached) {
       subjects.value = cached.subjects || [];
       activeId.value = subjects.value[0]?.id ?? null;
