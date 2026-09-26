@@ -86,6 +86,29 @@ function isDownloading(subject, pkg) {
   return downloading.value === `${subject.id}:${pkg.version}`;
 }
 
+// 已安装包版本映射（set_id -> version），来自 manageList，
+// 用于下载列表的「已下载 / 可更新」状态展示。
+const managedVersions = ref({});
+
+async function refreshManaged() {
+  if (!isTauri()) return;
+  try {
+    const res = await knowledge.manageList();
+    const map = {};
+    for (const s of res?.sets || []) map[s.set_id] = s.version;
+    managedVersions.value = map;
+  } catch {
+    /* 状态查询失败不影响下载功能本身 */
+  }
+}
+
+/** 包状态：none=未下载 / installed=已下载(版本一致) / updatable=可更新(本地版本更旧) */
+function pkgState(pkg) {
+  const installed = managedVersions.value[pkg.id];
+  if (!installed) return "none";
+  return installed === pkg.version ? "installed" : "updatable";
+}
+
 async function cachePath() {
   const dir = await appDataDir();
   return await join(dir, CACHE_FILE);
@@ -183,6 +206,7 @@ async function doDownload(subject, pkg) {
     await writeFile(path, new Uint8Array(buf));
     await knowledge.importSet({ src: path });
     await knowledgeSets.reload();
+    await refreshManaged(); // 导入成功后立即刷新「已下载」状态
     // 导入成功：清理暂存文件，避免重复下载累积冗余 .kpkg（删除失败不影响已完成的导入）
     try {
       await remove(path);
@@ -205,6 +229,7 @@ function onKeydown(e) {
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
   loadCatalog();
+  refreshManaged();
 });
 onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 </script>
@@ -250,6 +275,8 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
             <div class="pkg-main">
               <div class="pkg-title">
                 <span class="pkg-version">{{ pkg.version }}</span>
+                <span v-if="pkgState(pkg) === 'installed'" class="pkg-badge pkg-badge--ok">已下载</span>
+                <span v-else-if="pkgState(pkg) === 'updatable'" class="pkg-badge pkg-badge--warn">可更新</span>
               </div>
               <div class="pkg-meta">
                 {{ pkg.entries }} 条 · {{ pkg.size }} · 更新于 {{ pkg.updatedAt }}
@@ -260,7 +287,15 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
               :disabled="Boolean(downloading)"
               @click="doDownload(activeSubject, pkg)"
             >
-              {{ isDownloading(activeSubject, pkg) ? "下载中…" : "下载" }}
+              {{
+                isDownloading(activeSubject, pkg)
+                  ? "下载中…"
+                  : pkgState(pkg) === "none"
+                    ? "下载"
+                    : pkgState(pkg) === "updatable"
+                      ? "更新"
+                      : "重新下载"
+              }}
             </button>
           </div>
 
@@ -408,6 +443,25 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
+}
+
+/* 已下载 / 可更新 状态徽标 */
+.pkg-badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.7;
+  vertical-align: middle;
+}
+.pkg-badge--ok {
+  color: var(--ok-fg, #2f8a4e);
+  background: rgba(47, 138, 78, 0.12);
+}
+.pkg-badge--warn {
+  color: var(--warn-fg, #b5791a);
+  background: rgba(181, 121, 26, 0.14);
 }
 .pkg-meta {
   margin-top: 4px;
