@@ -85,8 +85,12 @@ export function resolveStartupView(rememberedId, sets) {
   const list = Array.isArray(sets) ? sets : [];
   const hasSets = list.length > 0;
 
-  // 无记忆：首次启动 → 首页（首页承载导入引导）
+  // 无记忆：有可用学科包则直接进入「最后一个载入的包」的浏览页（不再默认载入全部包数据）；
+  // 一个包都没有才回落首页（首页承载导入引导）。
   if (!rememberedId) {
+    if (hasSets) {
+      return { view: "browse", activeSetId: list[list.length - 1].id, clearMemory: false };
+    }
     return { view: "home", activeSetId: "all", clearMemory: false };
   }
 
