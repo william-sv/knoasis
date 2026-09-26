@@ -7,7 +7,15 @@
     "core:default",
     "opener:default",
     "dialog:default",
-    "http:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://cdn.jsdelivr.net/**" },
+        { "url": "https://raw.githubusercontent.com/**" },
+        { "url": "https://ghproxy.com/**" },
+        { "url": "https://raw.gitmirror.com/**" }
+      ]
+    },
     "fs:default"
   ]
 }
