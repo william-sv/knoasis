@@ -10,7 +10,7 @@ import { useUi } from "../stores/ui.js";
 import { isTauri, knowledge } from "../lib/ipc.js";
 import { useKnowledgeSets } from "../stores/knowledgeSets.js";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { writeFile, readTextFile, writeTextFile, mkdir, removeFile } from "@tauri-apps/plugin-fs";
+import { writeFile, readTextFile, writeTextFile, mkdir, remove } from "@tauri-apps/plugin-fs";
 import { join, appDataDir } from "@tauri-apps/api/path";
 
 const ui = useUi();
@@ -185,7 +185,7 @@ async function doDownload(subject, pkg) {
     await knowledgeSets.reload();
     // 导入成功：清理暂存文件，避免重复下载累积冗余 .kpkg（删除失败不影响已完成的导入）
     try {
-      await removeFile(path);
+      await remove(path);
     } catch {
       /* 暂存文件删除失败不阻断已完成的导入 */
     }
