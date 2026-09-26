@@ -44,7 +44,7 @@ async function call(cmd, args) {
  * 学科包管理（Dash 式 Docsets 管理）：
  *  - knowledge_manage_list()          → { user_root, sets: ManagedSet[] }（含已停用包）
  *  - knowledge_set_enabled({set_id, enabled}) → 同 manage_list（切换后回传最新列表）
- *  - knowledge_import_set({src_dir})  → ImportReport（校验 + 复制到用户知识根）
+ *  - knowledge_import_set({src})      → ImportReport（校验 + 复制到用户知识根）
  *  - knowledge_remove_set({set_id})   → RemoveReport（用户包真删 / 内置包退化为停用）
  *  - knowledge_open_dir({dir})        → null（在系统文件管理器中打开用户知识根内的目录；越界报错）
  */

@@ -181,7 +181,7 @@ async function doDownload(subject, pkg) {
     }
     const path = await join(dir, `${pkg.id}.kpkg`);
     await writeFile(path, new Uint8Array(buf));
-    await knowledge.importSet({ src_dir: path });
+    await knowledge.importSet({ src: path });
     await knowledgeSets.reload();
     // 导入成功：清理暂存文件，避免重复下载累积冗余 .kpkg（删除失败不影响已完成的导入）
     try {
