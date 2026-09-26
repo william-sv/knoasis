@@ -1,9 +1,10 @@
 // Knoasis · 启动路由（记忆用户选择的学科包）
 //
 // 需求：启动时根据「上次选择」决定停在首页还是直接进入某学科的浏览页：
-//  - 从未选择过学科包            → 首页（首次启动，首页给出导入引导）
-//  - 选择过且该包仍存在且启用     → 浏览页，激活该学科
-//  - 选择过「全部」              → 浏览页，激活全部
+//  - 从未选择过学科包            → 浏览页，激活最后一个载入的包（不默认载入全部）
+//  - 选择过某具体学科包且仍存在   → 浏览页，激活该学科
+//  - 选择过「全部」              → 视为「未选定具体学科」，同样激活最后一个载入的包
+//                                  （「全部」仅作为运行期切换视图，不作为持久化的启动默认）
 //  - 记住的学科包已被删除/停用    → 回落首页，并清掉失效记忆
 //
 // 本模块为纯逻辑（不依赖 Pinia / Vue / DOM 全局），便于单测：
@@ -85,31 +86,20 @@ export function resolveStartupView(rememberedId, sets) {
   const list = Array.isArray(sets) ? sets : [];
   const hasSets = list.length > 0;
 
-  // 无记忆：有可用学科包则直接进入「最后一个载入的包」的浏览页（不再默认载入全部包数据）；
-  // 一个包都没有才回落首页（首页承载导入引导）。
-  if (!rememberedId) {
-    if (hasSets) {
-      return { view: "browse", activeSetId: list[list.length - 1].id, clearMemory: false };
+  // 记住的是「具体学科包」且仍存在且启用 → 直接进入该学科浏览页
+  if (rememberedId && rememberedId !== "all") {
+    if (list.some((s) => s && s.id === rememberedId)) {
+      return { view: "browse", activeSetId: rememberedId, clearMemory: false };
     }
-    return { view: "home", activeSetId: "all", clearMemory: false };
+    // 记住的学科包已被删除 / 停用 → 回落首页并清掉失效记忆
+    return { view: "home", activeSetId: "all", clearMemory: true };
   }
 
-  // 一个可用学科包都没有：停在首页给出导入引导。
-  // 若记忆的是具体学科（此刻已不可用）则视为失效，清掉记忆；记忆「全部」可保留。
-  if (!hasSets) {
-    return { view: "home", activeSetId: "all", clearMemory: rememberedId !== "all" };
+  // 无记忆 或 记忆「全部」：都视为「未选定具体学科」。
+  // 有可用学科包则进入「最后一个载入的包」的浏览页（不再默认载入全部包数据）；
+  // 一个包都没有才回落首页（首页承载导入引导）。
+  if (hasSets) {
+    return { view: "browse", activeSetId: list[list.length - 1].id, clearMemory: false };
   }
-
-  // 记忆「全部」：有效 → 浏览全部
-  if (rememberedId === "all") {
-    return { view: "browse", activeSetId: "all", clearMemory: false };
-  }
-
-  // 记忆具体学科：仍存在且启用 → 直接进入该学科浏览页
-  if (list.some((s) => s && s.id === rememberedId)) {
-    return { view: "browse", activeSetId: rememberedId, clearMemory: false };
-  }
-
-  // 记住的学科包已被删除 / 停用 → 回落首页并清掉失效记忆
-  return { view: "home", activeSetId: "all", clearMemory: true };
+  return { view: "home", activeSetId: "all", clearMemory: false };
 }

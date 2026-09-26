@@ -49,10 +49,10 @@ test("QA: 记忆是任意脏字符串（含空格/emoji/超长）→ 安全的 h
     assert.equal(r.view, "home", `dirty=${JSON.stringify(dirty.slice(0, 12))}`);
     assert.equal(r.clearMemory, true);
   }
-  // 空串视为「无记忆」（不触发清键）
+  // 空串视为「无具体学科选择」→ 有学科包时落到最后一个载入的包（不默认载入全部，不触发清键）
   assert.deepEqual(resolveStartupView("", SETS), {
-    view: "home",
-    activeSetId: "all",
+    view: "browse",
+    activeSetId: "en-grammar",
     clearMemory: false,
   });
 });

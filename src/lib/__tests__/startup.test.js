@@ -28,10 +28,10 @@ const SETS = [{ id: "kr-grammar" }, { id: "en-grammar" }];
 
 // ---- resolveStartupView：核心三态 + 边界 ----
 
-test("无记忆 → 首页（首次启动）", () => {
+test("无记忆且有学科包 → 进入最后一个载入的包（不默认全部）", () => {
   const r = resolveStartupView(null, SETS);
-  assert.equal(r.view, "home");
-  assert.equal(r.activeSetId, "all");
+  assert.equal(r.view, "browse");
+  assert.equal(r.activeSetId, "en-grammar"); // SETS 末位
   assert.equal(r.clearMemory, false);
 });
 
@@ -49,10 +49,10 @@ test("记忆学科已被删除/停用 → 回落首页并清记忆", () => {
   assert.equal(r.clearMemory, true);
 });
 
-test("记忆「全部」→ 浏览全部（视为有效选择）", () => {
+test("记忆「全部」→ 视为未选定具体学科，进入最后一个载入的包", () => {
   const r = resolveStartupView("all", SETS);
   assert.equal(r.view, "browse");
-  assert.equal(r.activeSetId, "all");
+  assert.equal(r.activeSetId, "en-grammar"); // 等同无记忆：落到末位包而非全部
   assert.equal(r.clearMemory, false);
 });
 
