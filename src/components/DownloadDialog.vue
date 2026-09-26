@@ -22,22 +22,40 @@ const knowledgeSets = useKnowledgeSets();
 const REPO = "william-sv/knoasis";
 const BRANCH = "main";
 const MIRROR_TEMPLATES = [
-  (p) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${p}`,
   (p) => `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${p}`,
   (p) => `https://ghproxy.com/https://raw.githubusercontent.com/${REPO}/${BRANCH}/${p}`,
   (p) => `https://raw.gitmirror.com/${REPO}/${BRANCH}/${p}`,
+  (p) => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${p}`,
 ];
 function candidatesFor(relPath) {
   return MIRROR_TEMPLATES.map((t) => t(relPath));
 }
 const CATALOG_CANDIDATES = candidatesFor("disciplines/catalog.json");
 
+// 单请求超时封装：被墙的域名不会等到 TCP 超时（几十秒~分钟）才抛错，
+// 而是到时立即放弃，让上层切换下一个镜像源或回退缓存，避免界面长时间卡在 loading。
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`请求超时（${ms}ms）`)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
+
 // 依次尝试候选地址，返回首个成功的 JSON；全部失败则抛出最后一个错误。
 async function fetchFirstJson(candidates) {
   let lastErr;
   for (const url of candidates) {
     try {
-      const resp = await tauriFetch(url);
+      const resp = await withTimeout(tauriFetch(url), 8000);
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       return await resp.json();
     } catch (e) {
@@ -135,7 +153,7 @@ async function doDownload(subject, pkg) {
     let lastErr;
     for (const url of candidates) {
       try {
-        const resp = await tauriFetch(url);
+        const resp = await withTimeout(tauriFetch(url), 20000);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         buf = await resp.arrayBuffer();
         break;
