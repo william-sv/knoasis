@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
     ref="appRef"
     class="app-shell"
     :class="{ 'is-dragging': dragging }"
-    :style="{ '--accent': ui.accentColor, '--accent-rgb': ui.accentRgb }"
+    :style="{ '--accent': ui.accentColor }"
   >
     <TopToolbar />
 
