@@ -179,7 +179,8 @@ async function doDownload(subject, pkg) {
     } catch {
       /* 目录已存在时 mkdir 可能抛错，忽略即可 */
     }
-    const path = await join(dir, `${pkg.id}.kpkg`);
+    // 文件名加时间戳标记，避免重复下载时同名文件相互覆盖/冲突
+    const path = await join(dir, `${pkg.id}-${Date.now()}.kpkg`);
     await writeFile(path, new Uint8Array(buf));
     await knowledge.importSet({ src_dir: path });
     await knowledgeSets.reload();
