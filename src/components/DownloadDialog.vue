@@ -4,13 +4,13 @@
 // - 右侧：当前学科的版本包列表（版本号 / 条目数 / 包大小 / 更新日期 + [下载]）
 // - 打开时优先从多个镜像源读取学科包目录（raw → jsDelivr → ghproxy → gitmirror，依次回退）；
 //   拉取成功则刷新本地缓存（4 小时内有效）；全部镜像失败则回退到本地缓存。
-// - 点击下载时从 pkg.path 经同样的多镜像源拉取 .kpkg，落盘到 app 学科包目录（appDataDir/disciplines/）后调用 knowledge.importSet 导入并 reload。
+// - 点击下载时从 pkg.path 经同样的多镜像源拉取 .kpkg，落盘到应用数据目录下的临时暂存区（appDataDir/downloads/）后调用 knowledge.importSet 导入并 reload，导入成功即删除暂存文件。
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useUi } from "../stores/ui.js";
 import { isTauri, knowledge } from "../lib/ipc.js";
 import { useKnowledgeSets } from "../stores/knowledgeSets.js";
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
-import { writeFile, readTextFile, writeTextFile, mkdir } from "@tauri-apps/plugin-fs";
+import { writeFile, readTextFile, writeTextFile, mkdir, removeFile } from "@tauri-apps/plugin-fs";
 import { join, appDataDir } from "@tauri-apps/api/path";
 
 const ui = useUi();
@@ -171,19 +171,24 @@ async function doDownload(subject, pkg) {
       }
     }
     if (!buf) throw lastErr || new Error("所有镜像源均不可用");
-    // 落盘到 app 自身的学科包目录（非临时目录），下载后可直接载入对应学科包
+    // 下载到应用数据目录下的临时暂存区（固定名，导入成功后即删除；运行时不存在 disciplines/ 这类常驻目录）
     const baseDir = await appDataDir();
-    const dir = await join(baseDir, "disciplines");
+    const dir = await join(baseDir, "downloads");
     try {
       await mkdir(dir, { recursive: true });
     } catch {
       /* 目录已存在时 mkdir 可能抛错，忽略即可 */
     }
-    // 文件名加时间戳标记，避免重复下载时同名文件相互覆盖/冲突
-    const path = await join(dir, `${pkg.id}-${Date.now()}.kpkg`);
+    const path = await join(dir, `${pkg.id}.kpkg`);
     await writeFile(path, new Uint8Array(buf));
     await knowledge.importSet({ src_dir: path });
     await knowledgeSets.reload();
+    // 导入成功：清理暂存文件，避免重复下载累积冗余 .kpkg（删除失败不影响已完成的导入）
+    try {
+      await removeFile(path);
+    } catch {
+      /* 暂存文件删除失败不阻断已完成的导入 */
+    }
     ui.showToast(`已下载并导入 ${subject.name} ${pkg.version}`);
   } catch (e) {
     const msg = e && e.message ? e.message : String(e);
