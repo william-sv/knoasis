@@ -5,9 +5,16 @@ import { computed } from "vue";
 import { useUi } from "../stores/ui.js";
 import { useKnowledgeSets } from "../stores/knowledgeSets.js";
 import { knowledge } from "../lib/ipc.js";
+// 应用版本 / 学科包 schema 版本直接读取仓库配置，避免写死
+import appConfig from "../../src-tauri/tauri.conf.json";
+import disciplineCatalog from "../../disciplines/catalog.json";
 
 const ui = useUi();
 const ks = useKnowledgeSets();
+
+// 关于页展示：应用版本取自 tauri.conf.json 的 version；学科包 schema 版本取自 disciplines/catalog.json 的 version
+const appVersion = computed(() => appConfig.version || "—");
+const schemaVersion = computed(() => (disciplineCatalog.version ?? "—"));
 
 const themeChoices = [
   { value: "system", label: "跟随系统", desc: "随系统深色 / 浅色外观自动切换" },
@@ -95,11 +102,11 @@ async function openRoot() {
         <div class="kv-list">
           <div class="kv">
             <span class="kv-key">应用</span>
-            <span class="kv-val">Knoasis v0.1.0</span>
+            <span class="kv-val">Knoasis v{{ appVersion }}</span>
           </div>
           <div class="kv">
             <span class="kv-key">学科包 schema</span>
-            <span class="kv-val">支持版本 1</span>
+            <span class="kv-val">支持版本 {{ schemaVersion }}</span>
           </div>
         </div>
       </section>
