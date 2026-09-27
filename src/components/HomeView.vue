@@ -3,7 +3,7 @@
 // - 学科下载：打开「学科包下载」弹窗
 // - 学科管理：打开学科包管理弹窗
 // - 软件设置：进入设置整页
-// - 用户指南：在浏览器打开外部文档（未配置时提示）
+// - 指南：在浏览器打开外部文档（未配置时提示）
 import { computed } from "vue";
 import { useUi } from "../stores/ui.js";
 import { useKnowledgeSets } from "../stores/knowledgeSets.js";
@@ -42,11 +42,11 @@ function onSettings() {
 
 async function onUserGuide() {
   if (!USER_GUIDE_URL) {
-    ui.showToast("用户指南链接未配置");
+    ui.showToast("指南链接未配置");
     return;
   }
   const ok = await openExternal(USER_GUIDE_URL);
-  if (!ok) ui.showToast("无法打开用户指南（请在桌面应用中打开）");
+  if (!ok) ui.showToast("无法打开指南（请在桌面应用中打开）");
 }
 </script>
 
@@ -109,7 +109,7 @@ async function onUserGuide() {
         <button class="home-card" @click="onUserGuide">
           <img class="card-icon" :src="guideAsset" alt="" />
           <div class="card-body">
-            <div class="card-title">用户指南</div>
+            <div class="card-title">指南</div>
             <div class="card-desc">查看使用说明与常见问题文档</div>
           </div>
         </button>
