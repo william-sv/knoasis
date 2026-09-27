@@ -1,14 +1,14 @@
 {
   "name": "knoasis",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "node --test src/lib/grammar/__tests__/adapter.test.js src/lib/grammar/__tests__/detail-passthrough.test.js src/lib/__tests__/registry.test.js src/lib/__tests__/userdata.test.js src/lib/__tests__/startup.test.js src/lib/__tests__/shortcuts.test.js src/lib/__tests__/markdown.test.js",
+    "test": "node --test \"src/**/__tests__/*.test.js\"",
     "test:sfc": "node scripts/check-sfc.mjs"
   },
   "dependencies": {

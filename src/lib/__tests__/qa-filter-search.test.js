@@ -6,6 +6,9 @@
 //  - setFilter 的 toggle 语义（同值第二次 = 取消）
 //  - clearFilters 清空且不影响搜索词
 //  - 「筛选 + 学科范围」组合
+//
+// 注意：等级（level）维度已按设计取消（见 knowledgeSets.js baseList 注释），
+// 故筛选断言改用 type/category/tag 维度；filters 当前含 4 键（level/type/category/tag）。
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { createPinia, setActivePinia } from "pinia";
@@ -54,14 +57,14 @@ function uids(list) {
   return list.map((e) => e.uid).sort();
 }
 
-test("QA: 搜索 ∩ 筛选 为 AND（搜索命中 ∩ 等级筛选）", () => {
+test("QA: 搜索 ∩ 筛选 为 AND（搜索命中 ∩ 类型筛选）", () => {
   const { ks, search } = fresh();
-  search.q = "alpha";
+  search.q = "a"; // Alpha / Alpha Beta / Gamma / Delta 均含 'a'
   search.run();
-  assert.deepEqual(uids(ks.visibleEntries), ["u1", "u2"], "仅搜索：两条 Alpha");
+  assert.deepEqual(uids(ks.visibleEntries), ["u1", "u2", "u3", "u4"], "仅搜索：四条均含 a");
 
-  search.setFilter("level", "L1");
-  assert.deepEqual(uids(ks.visibleEntries), ["u1"], "搜索(alpha) ∩ 等级(L1) → 仅 u1");
+  search.setFilter("type", "pos");
+  assert.deepEqual(uids(ks.visibleEntries), ["u3", "u4"], "搜索(a) ∩ 类型(pos) → 仅 u3/u4");
 });
 
 test("QA: 仅筛选（无搜索）在学科范围内生效", () => {
@@ -70,26 +73,26 @@ test("QA: 仅筛选（无搜索）在学科范围内生效", () => {
   assert.deepEqual(uids(ks.visibleEntries), ["u3", "u4"]);
   search.setFilter("category", "c2");
   assert.deepEqual(uids(ks.visibleEntries), ["u3", "u4"], "type=pos ∩ category=c2");
-  search.setFilter("level", "L1");
+  search.setFilter("level", "L1"); // 等级维度已取消，不影响结果
   assert.deepEqual(uids(ks.visibleEntries), ["u3", "u4"]);
 });
 
 test("QA: setFilter 同值第二次点击 = 取消该维度（toggle）", () => {
   const { ks, search } = fresh();
-  search.setFilter("level", "L1");
-  assert.equal(search.filters.level, "L1");
-  assert.deepEqual(uids(ks.visibleEntries), ["u1", "u3", "u4"]);
+  search.setFilter("type", "grammar");
+  assert.equal(search.filters.type, "grammar");
+  assert.deepEqual(uids(ks.visibleEntries), ["u1", "u2"]);
 
-  search.setFilter("level", "L1"); // 再次点击同值
-  assert.equal(search.filters.level, null);
+  search.setFilter("type", "grammar"); // 再次点击同值
+  assert.equal(search.filters.type, null);
   assert.deepEqual(uids(ks.visibleEntries), ["u1", "u2", "u3", "u4"]);
 });
 
 test("QA: 切换到另一维度的值会替换而非并存", () => {
   const { search } = fresh();
-  search.setFilter("level", "L1");
-  search.setFilter("level", "L2");
-  assert.equal(search.filters.level, "L2");
+  search.setFilter("type", "grammar");
+  search.setFilter("type", "pos");
+  assert.equal(search.filters.type, "pos");
   assert.equal(search.filterActive, true);
 });
 
@@ -97,12 +100,12 @@ test("QA: clearFilters 清空全部维度但不影响搜索词", () => {
   const { search } = fresh();
   search.q = "alpha";
   search.run();
-  search.setFilter("level", "L2");
+  search.setFilter("level", "L2"); // 等级维度已取消，仍写入 filters 但不影响结果
   search.setFilter("type", "grammar");
   assert.equal(search.filterActive, true);
 
   search.clearFilters();
-  assert.deepEqual(search.filters, { level: null, type: null, category: null });
+  assert.deepEqual(search.filters, { level: null, type: null, category: null, tag: null });
   assert.equal(search.filterActive, false);
   assert.equal(search.q, "alpha", "搜索词不应被清除");
   assert.equal(search.active, true);
@@ -121,7 +124,7 @@ test("QA: 搜索 + 筛选 + 学科范围 三者叠加", () => {
 test("QA: 未知筛选键被忽略，不产生幽灵筛选", () => {
   const { search } = fresh();
   search.setFilter("bogus", "x");
-  assert.deepEqual(search.filters, { level: null, type: null, category: null });
+  assert.deepEqual(search.filters, { level: null, type: null, category: null, tag: null });
   assert.equal(search.filterActive, false);
 });
 

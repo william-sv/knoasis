@@ -10,10 +10,10 @@
     {
       "identifier": "http:default",
       "allow": [
-        { "url": "https://cdn.jsdelivr.net/**" },
-        { "url": "https://raw.githubusercontent.com/**" },
-        { "url": "https://ghproxy.com/**" },
-        { "url": "https://raw.gitmirror.com/**" }
+        { "url": "https://cdn.jsdelivr.net/gh/william-sv/knoasis/**" },
+        { "url": "https://raw.githubusercontent.com/william-sv/knoasis/**" },
+        { "url": "https://ghproxy.com/https://raw.githubusercontent.com/william-sv/knoasis/**" },
+        { "url": "https://raw.gitmirror.com/william-sv/knoasis/**" }
       ]
     },
     "fs:allow-appdata-read",
